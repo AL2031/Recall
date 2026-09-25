@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recall — Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/[email protected]/build/pdf.min.js"></script>
+<style>
+:root{--bg:#eeede9;--panel:#fff;--text:#1a1917;--sub:#69675f;--border:#dedcd4;--accent:#81b64c;--accent-dark:#6a9c3f;--ink:#fff;--danger:#c2392f;--hard:#d9a23b;--easy:#4c8bf5;--header-bg:#262421;--header-ink:#e9e8e4;--header-sub:#9c9a94;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--panel:#211f1c;--text:#eae9e5;--sub:#a3a099;--border:#33312c;--header-bg:#1a1917;}}
+:root[data-theme="dark"]{--bg:#171614;--panel:#211f1c;--text:#eae9e5;--sub:#a3a099;--border:#33312c;--header-bg:#1a1917;}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+header{position:sticky;top:0;padding:14px 16px;background:var(--header-bg);border-bottom:3px solid var(--accent);z-index:5;}
+h1{margin:0 0 10px;font-size:20px;font-weight:800;letter-spacing:.2px;color:var(--header-ink);}
+nav{display:flex;gap:4px;overflow-x:auto;}
+nav button{border:none;background:transparent;color:var(--header-sub);padding:8px 14px;border-radius:3px;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;}
+nav button:hover{background:rgba(255,255,255,.08);color:var(--header-ink);}
+nav button.active{background:var(--accent);color:#fff;}
+main{padding:16px;max-width:720px;margin:0 auto;padding-bottom:60px;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.06);}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+button.btn{background:var(--accent);color:var(--ink);border:none;border-bottom:3px solid var(--accent-dark);padding:10px 16px;border-radius:3px;font-size:14px;font-weight:700;cursor:pointer;}
+button.btn:hover{background:var(--accent-dark);}
+button.btn.secondary{background:transparent;color:var(--accent-dark);border:1px solid var(--border);border-bottom:1px solid var(--border);}
+button.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--danger);border-bottom:1px solid var(--danger);}
+button.btn:disabled{opacity:.5;cursor:default;}
+button.btn.grade-again{background:var(--danger);border-bottom-color:#8f2a22;}
+button.btn.grade-hard{background:var(--hard);border-bottom-color:#a97a1f;}
+button.btn.grade-good{background:var(--accent);border-bottom-color:var(--accent-dark);}
+button.btn.grade-easy{background:var(--easy);border-bottom-color:#2e63c4;}
+input,textarea,select{width:100%;padding:10px;border-radius:3px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;}
+textarea{min-height:100px;resize:vertical;}
+label{font-size:13px;color:var(--sub);font-weight:600;display:block;margin:10px 0 4px;}
+.sub{color:var(--sub);font-size:13px;}
+.hidden{display:none!important;}
+.study-card{min-height:220px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:19px;font-weight:600;padding:30px 16px;cursor:pointer;background:var(--bg);border-radius:3px;}
+.grade-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;}
+.grade-row button{padding:12px 4px;font-size:13px;color:#fff;}
+.deck-list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;}
+.deck-list-item+.deck-list-item{border-top:1px solid var(--border);}
+.chip{background:var(--accent);color:#fff;border-radius:3px;padding:2px 8px;font-size:12px;font-weight:700;}
+.overflow-x{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+td,th{border-bottom:1px solid var(--border);padding:6px;text-align:left;vertical-align:top;}
+th{color:var(--sub);font-weight:700;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.filelist{font-size:13px;margin-top:6px;}
+.filelist span{display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:2px 8px;margin:2px 4px 0 0;}
+details summary{font-weight:700;color:var(--accent-dark);}
+</style>
+</head>
+<body>
+<header>
+  <h1>Recall</h1>
+  <nav id="tabs">
+    <button data-tab="study" class="active">Study</button>
+    <button data-tab="decks">Decks</button>
+    <button data-tab="import">Import</button>
+    <button data-tab="ai">AI Create</button>
+    <button data-tab="settings">Settings</button>
+  </nav>
+</header>
+<main>
+  <div id="tab-study"></div>
+  <div id="tab-decks" class="hidden"></div>
+  <div id="tab-import" class="hidden"></div>
+  <div id="tab-ai" class="hidden"></div>
+  <div id="tab-settings" class="hidden"></div>
+</main>
+<script>
+const LS_KEY='recall_decks_v1', SET_KEY='recall_settings_v1';
+let state = load(LS_KEY, {decks:{}});
+let settings = load(SET_KEY, {baseUrl:'https://api.groq.com/openai/v1/chat/completions', apiKey:'', model:'openai/gpt-oss-120b', visionModel:'qwen/qwen3.8-27b'});
+let studySession = null;
+let aiFiles = [];
+
+function load(key, fallback){ try{ return JSON.parse(localStorage.getItem(key)) || fallback; }catch(e){ return fallback; } }
+function saveDecks(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function saveSettings(){ localStorage.setItem(SET_KEY, JSON.stringify(settings)); }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function ensureDeck(name){ const id=uid(); state.decks[id]={id,name,cards:[]}; saveDecks(); return id; }
+
+function schedule(card, rating){
+  const MIN=60000,HR=60*MIN,DAY=24*HR;
+  if(card.interval==null) card.interval=0;
+  if(card.ease==null) card.ease=2.5;
+  if(rating===0){ card.interval=10*MIN; card.ease=Math.max(1.3,card.ease-0.2); }
+  else{
+    if(card.interval===0){ card.interval = rating===1?8*HR:rating===2?DAY:4*DAY; }
+    else{ const f = rating===1?1.2:rating===2?card.ease:card.ease*1.3; card.interval=Math.round(card.interval*f); }
+    if(rating===1) card.ease=Math.max(1.3,card.ease-0.15);
+    if(rating===3) card.ease=Math.min(3.0,card.ease+0.15);
+  }
+  card.due=Date.now()+card.interval; card.reps=(card.reps||0)+1;
+}
+function dueCards(d){ const now=Date.now(); return d.cards.filter(c=>!c.due||c.due<=now); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+
+// ---------- STUDY ----------
+function renderStudy(){
+  const el=document.getElementById('tab-study');
+  const decks=Object.values(state.decks);
+  if(!studySession){
+    if(!decks.length){ el.innerHTML='<div class="card"><p class="sub">No decks yet. Create one in Decks, or generate cards with AI.</p></div>'; return; }
+    el.innerHTML=`<div class="card"><label>Pick a deck</label>
+      <select id="studyDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${dueCards(d).length} due / ${d.cards.length})</option>`).join('')}</select>
+      <div class="row" style="margin-top:12px;"><button class="btn" id="startStudyBtn">Start studying</button>
+      <label style="margin:0;"><input type="checkbox" id="allCardsChk" style="width:auto;"> include not-yet-due</label></div></div>`;
+    document.getElementById('startStudyBtn').onclick=()=>{
+      const deckId=document.getElementById('studyDeckSel').value, all=document.getElementById('allCardsChk').checked;
+      const deck=state.decks[deckId], pool=all?deck.cards.slice():dueCards(deck);
+      if(!pool.length){ alert('Nothing to study right now.'); return; }
+      studySession={deckId, queue:shuffle(pool.map(c=>c.id)), pos:0, showBack:false, total:pool.length};
+      renderStudy();
+    };
+    return;
+  }
+  const deck=state.decks[studySession.deckId];
+  if(!deck){ studySession=null; renderStudy(); return; }
+  if(studySession.pos>=studySession.queue.length){
+    el.innerHTML=`<div class="card"><h3>Session complete 🎉</h3><p class="sub">Reviewed ${studySession.total} card(s).</p><button class="btn" id="doneBtn">Back</button></div>`;
+    document.getElementById('doneBtn').onclick=()=>{ studySession=null; renderStudy(); }; return;
+  }
+  const card=deck.cards.find(c=>c.id===studySession.queue[studySession.pos]);
+  el.innerHTML=`<div class="card"><div class="row"><span class="chip">${escapeHtml(deck.name)}</span><span class="chip">${studySession.pos+1}/${studySession.queue.length}</span></div>
+    <div class="study-card" id="flipZone">${escapeHtml(studySession.showBack?card.back:card.front)}</div>
+    <p class="sub" style="text-align:center;">${studySession.showBack?'':'Tap card to reveal answer'}</p>
+    <div class="grade-row ${studySession.showBack?'':'hidden'}" id="gradeRow">
+    <button class="btn grade-again" data-r="0">Again</button><button class="btn grade-hard" data-r="1">Hard</button>
+    <button class="btn grade-good" data-r="2">Good</button><button class="btn grade-easy" data-r="3">Easy</button></div></div>`;
+  document.getElementById('flipZone').onclick=()=>{ studySession.showBack=true; renderStudy(); };
+  const gr=document.getElementById('gradeRow');
+  if(gr) gr.querySelectorAll('button').forEach(b=>b.onclick=()=>{ schedule(card,parseInt(b.dataset.r,10)); saveDecks(); studySession.pos++; studySession.showBack=false; renderStudy(); });
+}
+
+// ---------- DECKS ----------
+function renderDecks(){
+  const el=document.getElementById('tab-decks'), decks=Object.values(state.decks);
+  el.innerHTML=`<div class="card"><label>New deck name</label>
+    <div class="row"><input id="newDeckName" placeholder="e.g. Spanish Verbs"><button class="btn" id="addDeckBtn">Create</button></div></div>
+    <div id="deckListWrap"></div>`;
+  document.getElementById('addDeckBtn').onclick=()=>{ const v=document.getElementById('newDeckName').value.trim(); if(v){ ensureDeck(v); renderDecks(); } };
+  const wrap=document.getElementById('deckListWrap');
+  if(!decks.length){ wrap.innerHTML='<p class="sub">No decks yet.</p>'; return; }
+  wrap.innerHTML=decks.map(d=>`<div class="card"><div class="deck-list-item">
+    <div><strong>${escapeHtml(d.name)}</strong><div class="sub">${d.cards.length} cards · ${dueCards(d).length} due</div></div>
+    <div class="row" style="gap:6px;"><button class="btn secondary" data-act="export" data-id="${d.id}">Export</button>
+    <button class="btn danger" data-act="del" data-id="${d.id}">Delete</button></div></div>
+    <details><summary class="sub" style="cursor:pointer;">Add / view cards (${d.cards.length})</summary>
+    <div style="margin-top:10px;"><label>Front</label><input class="cf" data-id="${d.id}" placeholder="Question">
+    <label>Back</label><input class="cb" data-id="${d.id}" placeholder="Answer">
+    <button class="btn" style="margin-top:8px;" data-act="addcard" data-id="${d.id}">Add card</button>
+    <div class="overflow-x" style="margin-top:10px;"><table><tr><th>Front</th><th>Back</th><th></th></tr>
+    ${d.cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${escapeHtml(c.back)}</td><td><button class="btn danger" data-act="delcard" data-id="${d.id}" data-cid="${c.id}">✕</button></td></tr>`).join('')}
+    </table></div></div></details></div>`).join('');
+  wrap.querySelectorAll('[data-act="del"]').forEach(b=>b.onclick=()=>{ if(confirm('Delete this deck?')){ delete state.decks[b.dataset.id]; saveDecks(); renderDecks(); } });
+  wrap.querySelectorAll('[data-act="addcard"]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.id, f=wrap.querySelector(`.cf[data-id="${id}"]`), bk=wrap.querySelector(`.cb[data-id="${id}"]`);
+    if(!f.value.trim()||!bk.value.trim()) return;
+    state.decks[id].cards.push({id:uid(),front:f.value.trim(),back:bk.value.trim(),interval:0,ease:2.5,due:0,reps:0});
+    saveDecks(); renderDecks();
+  });
+  wrap.querySelectorAll('[data-act="delcard"]').forEach(b=>b.onclick=()=>{ const d=state.decks[b.dataset.id]; d.cards=d.cards.filter(c=>c.id!==b.dataset.cid); saveDecks(); renderDecks(); });
+  wrap.querySelectorAll('[data-act="export"]').forEach(b=>b.onclick=()=>exportDeck(b.dataset.id));
+}
+function exportDeck(id){
+  const d=state.decks[id];
+  const csv=d.cards.map(c=>`"${c.front.replace(/"/g,'""')}","${c.back.replace(/"/g,'""')}"`).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=d.name+'.csv'; a.click();
+}
+
+// ---------- IMPORT ----------
+function renderImport(){
+  const el=document.getElementById('tab-import'), decks=Object.values(state.decks);
+  el.innerHTML=`<div class="card"><p class="sub">Paste cards — one per line, as <code>front,back</code> or tab-separated. Works with Anki/Quizlet exports.</p>
+    <label>Import into</label><select id="impDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck</option></select>
+    <input id="impNewName" class="hidden" placeholder="New deck name" style="margin-top:8px;">
+    <label>Card data</label><textarea id="impText" placeholder="Bonjour,Hello&#10;Merci,Thank you"></textarea>
+    <button class="btn" id="impBtn" style="margin-top:10px;">Import cards</button><p class="sub" id="impResult"></p></div>`;
+  const sel=document.getElementById('impDeckSel');
+  sel.onchange=()=>document.getElementById('impNewName').classList.toggle('hidden', sel.value!=='__new');
+  document.getElementById('impBtn').onclick=()=>{
+    let deckId=sel.value;
+    if(deckId==='__new'){ const nm=document.getElementById('impNewName').value.trim(); if(!nm){alert('Name the new deck first.');return;} deckId=ensureDeck(nm); }
+    const lines=document.getElementById('impText').value.split('\n').map(l=>l.trim()).filter(Boolean);
+    let added=0;
+    lines.forEach(line=>{
+      const parts=line.includes('\t')?line.split('\t'):splitCsvLine(line);
+      if(parts.length>=2 && parts[0] && parts[1]){ state.decks[deckId].cards.push({id:uid(),front:parts[0].trim(),back:parts[1].trim(),interval:0,ease:2.5,due:0,reps:0}); added++; }
+    });
+    saveDecks(); document.getElementById('impResult').textContent=`Imported ${added} card(s).`; document.getElementById('impText').value=''; renderDecks();
+  };
+}
+function splitCsvLine(line){
+  const out=[]; let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){ const ch=line[i];
+    if(ch==='"'){ if(inQ&&line[i+1]==='"'){cur+='"';i++;} else inQ=!inQ; }
+    else if(ch===','&&!inQ){ out.push(cur); cur=''; } else cur+=ch; }
+  out.push(cur); return out;
+}
+
+// ---------- SETTINGS ----------
+function renderSettings(){
+  const el=document.getElementById('tab-settings');
+  el.innerHTML=`<div class="card">
+    <p class="sub">Recall calls an OpenAI-compatible chat API for AI Create. Works with Groq, OpenAI, or any compatible endpoint. Your key is stored only in this browser.</p>
+    <label>API Base URL</label><input id="setBase" value="${escapeHtml(settings.baseUrl)}">
+    <label>API Key</label><input id="setKey" type="password" value="${escapeHtml(settings.apiKey)}">
+    <label>Text model (e.g. a Groq/OpenAI chat model name)</label><input id="setModel" value="${escapeHtml(settings.model)}" placeholder="e.g. llama-3.3-70b-versatile">
+    <label>Vision model (used only when you attach images — leave blank to reuse text model)</label><input id="setVision" value="${escapeHtml(settings.visionModel)}" placeholder="optional">
+    <button class="btn" id="saveSetBtn" style="margin-top:10px;">Save settings</button>
+    <p class="sub" id="setStatus"></p></div>`;
+  document.getElementById('saveSetBtn').onclick=()=>{
+    settings={baseUrl:document.getElementById('setBase').value.trim(), apiKey:document.getElementById('setKey').value.trim(),
+      model:document.getElementById('setModel').value.trim(), visionModel:document.getElementById('setVision').value.trim()};
+    saveSettings(); document.getElementById('setStatus').textContent='Saved.';
+  };
+}
+
+// ---------- AI CREATE ----------
+async function extractPdfText(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+  let text='';
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const content=await page.getTextContent();
+    text += content.items.map(i=>i.str).join(' ') + '\n';
+  }
+  return text;
+}
+function readAsText(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsText(file); }); }
+function readAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+
+function renderAI(){
+  const el=document.getElementById('tab-ai'), decks=Object.values(state.decks);
+  const ready = settings.apiKey && settings.baseUrl && settings.model;
+  el.innerHTML=`<div class="card">
+    ${ready?'':'<p class="sub">Set up your API key and model in Settings first.</p>'}
+    <label>Attach files (text, .md, .csv, PDF, or images)</label>
+    <input type="file" id="aiFileInput" multiple accept=".txt,.md,.csv,.pdf,image/*" ${ready?'':'disabled'}>
+    <div class="filelist" id="aiFileList"></div>
+    <label>Extra notes (optional)</label>
+    <textarea id="aiInput" placeholder="Any extra context or a topic to focus on" ${ready?'':'disabled'}></textarea>
+    <p class="sub">The AI decides how many cards to make based on the material, and checks your existing decks to avoid duplicating cards you already have.</p>
+    <label>Save into</label>
+    <select id="aiDeckSel" ${ready?'':'disabled'}>${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck</option></select>
+    <input id="aiNewName" class="hidden" placeholder="New deck name" style="margin-top:8px;">
+    <button class="btn" id="aiBtn" style="margin-top:10px;" ${ready?'':'disabled'}>Generate cards</button>
+    <p class="sub" id="aiStatus"></p><div id="aiPreview"></div></div>`;
+  if(!ready) return;
+  const sel=document.getElementById('aiDeckSel');
+  sel.onchange=()=>document.getElementById('aiNewName').classList.toggle('hidden', sel.value!=='__new');
+  document.getElementById('aiFileInput').onchange=(e)=>{ aiFiles=Array.from(e.target.files); document.getElementById('aiFileList').innerHTML=aiFiles.map(f=>`<span>${escapeHtml(f.name)}</span>`).join(''); };
+
+  document.getElementById('aiBtn').onclick=async ()=>{
+    const notes=document.getElementById('aiInput').value.trim();
+    const btn=document.getElementById('aiBtn');
+    btn.disabled=true; document.getElementById('aiStatus').innerHTML='<span class="spinner"></span> Reading files…';
+    try{
+      let combinedText = notes;
+      const images = [];
+      for(const f of aiFiles){
+        if(f.type.startsWith('image/')) images.push(await readAsDataURL(f));
+        else if(f.type==='application/pdf' || f.name.endsWith('.pdf')) combinedText += '\n\n'+await extractPdfText(f);
+        else combinedText += '\n\n'+await readAsText(f);
+      }
+      if(!combinedText.trim() && !images.length){ alert('Attach a file or add some notes first.'); btn.disabled=false; document.getElementById('aiStatus').textContent=''; return; }
+
+      // existing-deck context to avoid duplicates
+      const existingSummary = Object.values(state.decks).map(d=>
+        `Deck "${d.name}" already has ${d.cards.length} card(s), fronts include: ${d.cards.slice(0,25).map(c=>c.front).join(' | ')}`
+      ).join('\n');
+
+      document.getElementById('aiStatus').innerHTML='<span class="spinner"></span> Generating cards…';
+      const promptText = `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality flashcards.
+Decide the number of cards yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive cards).
+Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
+Existing decks:
+${existingSummary || '(none yet)'}
+
+Material:
+${combinedText.slice(0,12000)}
+
+Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing else — no markdown, no commentary.`;
+
+      const useVision = images.length>0;
+      const model = useVision ? (settings.visionModel || settings.model) : settings.model;
+      const content = useVision
+        ? [{type:'text', text:promptText}, ...images.map(u=>({type:'image_url', image_url:{url:u}}))]
+        : promptText;
+
+      const resp = await fetch(settings.baseUrl, {
+        method:'POST',
+        headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+settings.apiKey},
+        body: JSON.stringify({ model, messages:[{role:'user', content}], temperature:0.4 })
+      });
+      if(!resp.ok) throw new Error('API error '+resp.status);
+      const data = await resp.json();
+      const raw = data.choices?.[0]?.message?.content || '';
+      const match = raw.match(/\[[\s\S]*\]/);
+      const cards = JSON.parse(match ? match[0] : raw);
+      if(!Array.isArray(cards) || !cards.length) throw new Error('no cards');
+
+      document.getElementById('aiStatus').textContent = `Generated ${cards.length} card(s). Review below, then save.`;
+      const preview = document.getElementById('aiPreview');
+      preview.innerHTML = `<div class="overflow-x"><table><tr><th>Front</th><th>Back</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front||'')}</td><td>${escapeHtml(c.back||'')}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`;
+      document.getElementById('aiSaveBtn').onclick=()=>{
+        let deckId=sel.value;
+        if(deckId==='__new'){ const nm=document.getElementById('aiNewName').value.trim(); if(!nm){alert('Name the new deck first.');return;} deckId=ensureDeck(nm); }
+        const existingFronts = new Set(state.decks[deckId].cards.map(c=>c.front.toLowerCase().trim()));
+        let saved=0;
+        cards.forEach(c=>{
+          if(c.front && c.back && !existingFronts.has(String(c.front).toLowerCase().trim())){
+            state.decks[deckId].cards.push({id:uid(), front:c.front, back:c.back, interval:0, ease:2.5, due:0, reps:0});
+            saved++;
+          }
+        });
+        saveDecks();
+        document.getElementById('aiStatus').textContent = `Saved ${saved} card(s)${saved<cards.length?' ('+(cards.length-saved)+' skipped as duplicates)':''}.`;
+        preview.innerHTML=''; renderDecks();
+      };
+    }catch(e){
+      document.getElementById('aiStatus').textContent = 'Could not generate cards ('+e.message+'). Check your Settings and try again.';
+    }
+    btn.disabled=false;
+  };
+}
+
+const renderers={study:renderStudy, decks:renderDecks, import:renderImport, ai:renderAI, settings:renderSettings};
+document.getElementById('tabs').addEventListener('click', e=>{
+  const b=e.target.closest('button[data-tab]'); if(!b) return;
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  Object.keys(renderers).forEach(k=>document.getElementById('tab-'+k).classList.toggle('hidden', k!==b.dataset.tab));
+  renderers[b.dataset.tab]();
+});
+renderStudy(); renderDecks(); renderImport(); renderAI(); renderSettings();
+</script>
+</body>
+</html>
