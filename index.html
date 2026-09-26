@@ -75,7 +75,7 @@ details summary{font-weight:700;color:var(--accent-dark);}
 <script>
 const LS_KEY='recall_decks_v1', SET_KEY='recall_settings_v1';
 let state = load(LS_KEY, {decks:{}});
-let settings = load(SET_KEY, {baseUrl:'https://api.groq.com/openai/v1/chat/completions', apiKey:'', model:'openai/gpt-oss-120b', visionModel:'qwen/qwen3.8-27b'});
+let settings = load(SET_KEY, {model:'openai/gpt-oss-120b', visionModel:'qwen/qwen3.8-27b'});
 let studySession = null;
 let aiFiles = [];
 
@@ -210,16 +210,13 @@ function splitCsvLine(line){
 function renderSettings(){
   const el=document.getElementById('tab-settings');
   el.innerHTML=`<div class="card">
-    <p class="sub">Recall calls an OpenAI-compatible chat API for AI Create. Works with Groq, OpenAI, or any compatible endpoint. Your key is stored only in this browser.</p>
-    <label>API Base URL</label><input id="setBase" value="${escapeHtml(settings.baseUrl)}">
-    <label>API Key</label><input id="setKey" type="password" value="${escapeHtml(settings.apiKey)}">
-    <label>Text model (e.g. a Groq/OpenAI chat model name)</label><input id="setModel" value="${escapeHtml(settings.model)}" placeholder="e.g. llama-3.3-70b-versatile">
+    <p class="sub">Your Groq API key is never entered here. It's stored as an environment variable (<code>GROQ_API_KEY</code>) on your host, and a small serverless function at <code>/api/generate</code> uses it server-side to call Groq for you.</p>
+    <label>Text model</label><input id="setModel" value="${escapeHtml(settings.model)}" placeholder="e.g. openai/gpt-oss-120b">
     <label>Vision model (used only when you attach images — leave blank to reuse text model)</label><input id="setVision" value="${escapeHtml(settings.visionModel)}" placeholder="optional">
     <button class="btn" id="saveSetBtn" style="margin-top:10px;">Save settings</button>
     <p class="sub" id="setStatus"></p></div>`;
   document.getElementById('saveSetBtn').onclick=()=>{
-    settings={baseUrl:document.getElementById('setBase').value.trim(), apiKey:document.getElementById('setKey').value.trim(),
-      model:document.getElementById('setModel').value.trim(), visionModel:document.getElementById('setVision').value.trim()};
+    settings={model:document.getElementById('setModel').value.trim(), visionModel:document.getElementById('setVision').value.trim()};
     saveSettings(); document.getElementById('setStatus').textContent='Saved.';
   };
 }
@@ -241,9 +238,9 @@ function readAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileRe
 
 function renderAI(){
   const el=document.getElementById('tab-ai'), decks=Object.values(state.decks);
-  const ready = settings.apiKey && settings.baseUrl && settings.model;
+  const ready = !!settings.model;
   el.innerHTML=`<div class="card">
-    ${ready?'':'<p class="sub">Set up your API key and model in Settings first.</p>'}
+    ${ready?'':'<p class="sub">Set a text model in Settings first.</p>'}
     <label>Attach files (text, .md, .csv, PDF, or images)</label>
     <input type="file" id="aiFileInput" multiple accept=".txt,.md,.csv,.pdf,image/*" ${ready?'':'disabled'}>
     <div class="filelist" id="aiFileList"></div>
@@ -297,13 +294,13 @@ Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing e
         ? [{type:'text', text:promptText}, ...images.map(u=>({type:'image_url', image_url:{url:u}}))]
         : promptText;
 
-      const resp = await fetch(settings.baseUrl, {
+      const resp = await fetch('/api/generate', {
         method:'POST',
-        headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+settings.apiKey},
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ model, messages:[{role:'user', content}], temperature:0.4 })
       });
-      if(!resp.ok) throw new Error('API error '+resp.status);
       const data = await resp.json();
+      if(!resp.ok) throw new Error(data.error || ('API error '+resp.status));
       const raw = data.choices?.[0]?.message?.content || '';
       const match = raw.match(/\[[\s\S]*\]/);
       const cards = JSON.parse(match ? match[0] : raw);
@@ -328,7 +325,7 @@ Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing e
         preview.innerHTML=''; renderDecks();
       };
     }catch(e){
-      document.getElementById('aiStatus').textContent = 'Could not generate cards ('+e.message+'). Check your Settings and try again.';
+      document.getElementById('aiStatus').textContent = 'Could not generate cards ('+e.message+'). Make sure GROQ_API_KEY is set on your host and try again.';
     }
     btn.disabled=false;
   };
