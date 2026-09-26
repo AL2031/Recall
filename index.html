@@ -52,6 +52,23 @@ th{color:var(--sub);font-weight:700;}
 .filelist{font-size:13px;margin-top:6px;}
 .filelist span{display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:2px 8px;margin:2px 4px 0 0;}
 details summary{font-weight:700;color:var(--accent-dark);}
+.row{flex-wrap:wrap;}
+.mcq-options{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.mcq-opt{width:100%;text-align:left;padding:12px 14px;border-radius:3px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:14px;font-family:inherit;cursor:pointer;}
+.mcq-opt:hover:not(:disabled){border-color:var(--accent);}
+.mcq-opt:disabled{cursor:default;}
+.mcq-opt.correct{background:var(--accent);color:#fff;border-color:var(--accent-dark);}
+.mcq-opt.wrong{background:var(--danger);color:#fff;border-color:#8f2a22;}
+.type-toggle{display:flex;gap:6px;margin:10px 0;}
+.type-toggle button{flex:1;padding:8px;border:1px solid var(--border);background:var(--panel);color:var(--sub);border-radius:3px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.type-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent-dark);}
+.opt-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.opt-row input[type=radio]{width:auto;flex:none;}
+.opt-row input[type=text]{flex:1;}
+.fitb-feedback{margin-top:12px;font-weight:700;text-align:center;}
+.fitb-feedback.correct{color:var(--accent-dark);}
+.fitb-feedback.wrong{color:var(--danger);}
+.fitb-answers{font-weight:400;color:var(--sub);font-size:13px;margin-top:2px;}
 </style>
 </head>
 <body>
@@ -113,7 +130,7 @@ function renderStudy(){
       const deckId=document.getElementById('studyDeckSel').value, all=document.getElementById('allCardsChk').checked;
       const deck=state.decks[deckId], pool=all?deck.cards.slice():dueCards(deck);
       if(!pool.length){ alert('Nothing to study right now.'); return; }
-      studySession={deckId, queue:shuffle(pool.map(c=>c.id)), pos:0, showBack:false, total:pool.length};
+      studySession={deckId, queue:shuffle(pool.map(c=>c.id)), pos:0, showBack:false, selected:null, optionOrder:null, typed:'', total:pool.length};
       renderStudy();
     };
     return;
@@ -125,6 +142,17 @@ function renderStudy(){
     document.getElementById('doneBtn').onclick=()=>{ studySession=null; renderStudy(); }; return;
   }
   const card=deck.cards.find(c=>c.id===studySession.queue[studySession.pos]);
+  if(!card){ studySession.pos++; renderStudy(); return; }
+  if(card.type==='mcq') renderStudyMCQ(el, deck, card);
+  else if(card.type==='fitb') renderStudyFITB(el, deck, card);
+  else renderStudyBasic(el, deck, card);
+}
+function advanceCard(card, rating){
+  schedule(card, rating); saveDecks();
+  studySession.pos++; studySession.showBack=false; studySession.selected=null; studySession.optionOrder=null; studySession.typed='';
+  renderStudy();
+}
+function renderStudyBasic(el, deck, card){
   el.innerHTML=`<div class="card"><div class="row"><span class="chip">${escapeHtml(deck.name)}</span><span class="chip">${studySession.pos+1}/${studySession.queue.length}</span></div>
     <div class="study-card" id="flipZone">${escapeHtml(studySession.showBack?card.back:card.front)}</div>
     <p class="sub" style="text-align:center;">${studySession.showBack?'':'Tap card to reveal answer'}</p>
@@ -133,10 +161,93 @@ function renderStudy(){
     <button class="btn grade-good" data-r="2">Good</button><button class="btn grade-easy" data-r="3">Easy</button></div></div>`;
   document.getElementById('flipZone').onclick=()=>{ studySession.showBack=true; renderStudy(); };
   const gr=document.getElementById('gradeRow');
-  if(gr) gr.querySelectorAll('button').forEach(b=>b.onclick=()=>{ schedule(card,parseInt(b.dataset.r,10)); saveDecks(); studySession.pos++; studySession.showBack=false; renderStudy(); });
+  if(gr) gr.querySelectorAll('button').forEach(b=>b.onclick=()=>advanceCard(card, parseInt(b.dataset.r,10)));
+}
+function renderStudyMCQ(el, deck, card){
+  if(!studySession.optionOrder) studySession.optionOrder = shuffle(card.options.map((_,i)=>i));
+  const order=studySession.optionOrder, revealed=studySession.showBack, selected=studySession.selected;
+  el.innerHTML=`<div class="card"><div class="row"><span class="chip">${escapeHtml(deck.name)}</span><span class="chip">${studySession.pos+1}/${studySession.queue.length}</span></div>
+    <div class="study-card" style="cursor:default;">${escapeHtml(card.front)}</div>
+    <div class="mcq-options">${order.map(i=>{
+      let cls='mcq-opt';
+      if(revealed){ if(i===card.correctIndex) cls+=' correct'; else if(i===selected) cls+=' wrong'; }
+      return `<button type="button" class="${cls}" data-i="${i}" ${revealed?'disabled':''}>${escapeHtml(card.options[i])}</button>`;
+    }).join('')}</div>
+    <div class="grade-row ${revealed?'':'hidden'}" id="gradeRow">
+    <button class="btn grade-again" data-r="0">Again</button><button class="btn grade-hard" data-r="1">Hard</button>
+    <button class="btn grade-good" data-r="2">Good</button><button class="btn grade-easy" data-r="3">Easy</button></div></div>`;
+  if(!revealed){
+    el.querySelectorAll('.mcq-opt').forEach(b=>b.onclick=()=>{ studySession.selected=parseInt(b.dataset.i,10); studySession.showBack=true; renderStudy(); });
+  }
+  const gr=document.getElementById('gradeRow');
+  if(gr) gr.querySelectorAll('button').forEach(b=>b.onclick=()=>advanceCard(card, parseInt(b.dataset.r,10)));
+}
+function fitbMatch(card, guess){
+  const norm=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+  const g=norm(guess);
+  return !!g && card.answers.some(a=>norm(a)===g);
+}
+function renderStudyFITB(el, deck, card){
+  const revealed=studySession.showBack;
+  const correct=revealed ? fitbMatch(card, studySession.typed) : null;
+  el.innerHTML=`<div class="card"><div class="row"><span class="chip">${escapeHtml(deck.name)}</span><span class="chip">${studySession.pos+1}/${studySession.queue.length}</span></div>
+    <div class="study-card" style="cursor:default;">${escapeHtml(card.front)}</div>
+    <div style="margin-top:14px;">
+      <input type="text" id="fitbInput" placeholder="Type your answer" ${revealed?'disabled':''} value="${escapeHtml(revealed?(studySession.typed||''):'')}" autocomplete="off">
+      <div class="row" style="margin-top:8px;">
+        <button class="btn" id="fitbCheckBtn" ${revealed?'disabled':''}>Check answer</button>
+        <button class="btn secondary" id="fitbSkipBtn" ${revealed?'disabled':''}>I don't know</button>
+      </div>
+    </div>
+    ${revealed?`<div class="fitb-feedback ${correct?'correct':'wrong'}">${correct?'Correct!':'Not quite.'}<div class="fitb-answers">Accepted: ${card.answers.map(a=>escapeHtml(a)).join(', ')}</div></div>`:''}
+    <div class="grade-row ${revealed?'':'hidden'}" id="gradeRow">
+    <button class="btn grade-again" data-r="0">Again</button><button class="btn grade-hard" data-r="1">Hard</button>
+    <button class="btn grade-good" data-r="2">Good</button><button class="btn grade-easy" data-r="3">Easy</button></div></div>`;
+  if(!revealed){
+    const input=document.getElementById('fitbInput');
+    input.focus();
+    const submit=()=>{ studySession.typed=input.value; studySession.showBack=true; renderStudy(); };
+    document.getElementById('fitbCheckBtn').onclick=submit;
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+    document.getElementById('fitbSkipBtn').onclick=()=>{ studySession.typed=''; studySession.showBack=true; renderStudy(); };
+  }
+  const gr=document.getElementById('gradeRow');
+  if(gr) gr.querySelectorAll('button').forEach(b=>b.onclick=()=>advanceCard(card, parseInt(b.dataset.r,10)));
 }
 
 // ---------- DECKS ----------
+let editingCardId=null;
+function cardSummary(c){
+  if(c.type==='mcq'){
+    return `<div><strong>${escapeHtml(c.front)}</strong></div><div class="sub">MCQ · correct: ${escapeHtml(c.options[c.correctIndex]||'')}</div>`;
+  }
+  if(c.type==='fitb'){
+    return `<div><strong>${escapeHtml(c.front)}</strong></div><div class="sub">Fill-in-the-blank · accepted: ${escapeHtml((c.answers||[]).join(', '))}</div>`;
+  }
+  return `<div><strong>${escapeHtml(c.front)}</strong></div><div class="sub">${escapeHtml(c.back)}</div>`;
+}
+function cardEditForm(d, c){
+  if(c.type==='mcq'){
+    return `<div class="card" style="margin:8px 0;">
+      <label>Question</label><input class="editFront" data-id="${c.id}" value="${escapeHtml(c.front)}">
+      ${[0,1,2,3].map(i=>`<div class="opt-row"><input type="radio" name="editCorrect-${c.id}" value="${i}" ${i===c.correctIndex?'checked':''}>
+        <input type="text" class="editOpt" data-id="${c.id}" data-idx="${i}" value="${escapeHtml(c.options[i]||'')}" placeholder="Option ${i+1}"></div>`).join('')}
+      <div class="row" style="margin-top:8px;"><button class="btn" data-act="savemcq" data-id="${c.id}" data-deck="${d.id}">Save</button>
+      <button class="btn secondary" data-act="canceledit">Cancel</button></div></div>`;
+  }
+  if(c.type==='fitb'){
+    return `<div class="card" style="margin:8px 0;">
+      <label>Question (use ___ for the blank)</label><input class="editFront" data-id="${c.id}" value="${escapeHtml(c.front)}">
+      <label>Accepted answers (comma-separated — list every acceptable variant)</label><input class="editAnswers" data-id="${c.id}" value="${escapeHtml((c.answers||[]).join(', '))}">
+      <div class="row" style="margin-top:8px;"><button class="btn" data-act="savefitb" data-id="${c.id}" data-deck="${d.id}">Save</button>
+      <button class="btn secondary" data-act="canceledit">Cancel</button></div></div>`;
+  }
+  return `<div class="card" style="margin:8px 0;">
+    <label>Front</label><input class="editFront" data-id="${c.id}" value="${escapeHtml(c.front)}">
+    <label>Back</label><input class="editBack" data-id="${c.id}" value="${escapeHtml(c.back)}">
+    <div class="row" style="margin-top:8px;"><button class="btn" data-act="savebasic" data-id="${c.id}" data-deck="${d.id}">Save</button>
+    <button class="btn secondary" data-act="canceledit">Cancel</button></div></div>`;
+}
 function renderDecks(){
   const el=document.getElementById('tab-decks'), decks=Object.values(state.decks);
   el.innerHTML=`<div class="card"><label>New deck name</label>
@@ -147,30 +258,137 @@ function renderDecks(){
   if(!decks.length){ wrap.innerHTML='<p class="sub">No decks yet.</p>'; return; }
   wrap.innerHTML=decks.map(d=>`<div class="card"><div class="deck-list-item">
     <div><strong>${escapeHtml(d.name)}</strong><div class="sub">${d.cards.length} cards · ${dueCards(d).length} due</div></div>
-    <div class="row" style="gap:6px;"><button class="btn secondary" data-act="export" data-id="${d.id}">Export</button>
+    <div class="row" style="gap:6px;justify-content:flex-end;">
+    <button class="btn secondary" data-act="export" data-id="${d.id}" title="Simple front,back CSV — works with Quizlet/Anki-style imports">Export CSV</button>
+    <button class="btn secondary" data-act="exportmc" data-id="${d.id}" title="Question, Answer 1-4, Correct Answer — the layout Gimkit/Kahoot/Quizizz-style spreadsheet imports expect">Export MC CSV</button>
     <button class="btn danger" data-act="del" data-id="${d.id}">Delete</button></div></div>
     <details><summary class="sub" style="cursor:pointer;">Add / view cards (${d.cards.length})</summary>
-    <div style="margin-top:10px;"><label>Front</label><input class="cf" data-id="${d.id}" placeholder="Question">
-    <label>Back</label><input class="cb" data-id="${d.id}" placeholder="Answer">
-    <button class="btn" style="margin-top:8px;" data-act="addcard" data-id="${d.id}">Add card</button>
-    <div class="overflow-x" style="margin-top:10px;"><table><tr><th>Front</th><th>Back</th><th></th></tr>
-    ${d.cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${escapeHtml(c.back)}</td><td><button class="btn danger" data-act="delcard" data-id="${d.id}" data-cid="${c.id}">✕</button></td></tr>`).join('')}
-    </table></div></div></details></div>`).join('');
+    <div style="margin-top:10px;">
+      <div class="type-toggle">
+        <button type="button" class="typeBtn active" data-deck="${d.id}" data-type="basic">Basic</button>
+        <button type="button" class="typeBtn" data-deck="${d.id}" data-type="mcq">Multiple choice</button>
+        <button type="button" class="typeBtn" data-deck="${d.id}" data-type="fitb">Fill in the blank</button>
+      </div>
+      <div class="addBasic" data-deck="${d.id}">
+        <label>Front</label><input class="cf" data-id="${d.id}" placeholder="Question">
+        <label>Back</label><input class="cb" data-id="${d.id}" placeholder="Answer">
+        <button class="btn" style="margin-top:8px;" data-act="addcard" data-id="${d.id}">Add card</button>
+      </div>
+      <div class="addMcq hidden" data-deck="${d.id}">
+        <label>Question</label><input class="mq" data-id="${d.id}" placeholder="Question">
+        ${[0,1,2,3].map(i=>`<div class="opt-row"><input type="radio" name="mcorrect-${d.id}" class="mcr" data-id="${d.id}" value="${i}" ${i===0?'checked':''}>
+          <input type="text" class="mo" data-id="${d.id}" data-idx="${i}" placeholder="Option ${i+1}"></div>`).join('')}
+        <button class="btn" style="margin-top:8px;" data-act="addmcq" data-id="${d.id}">Add card</button>
+      </div>
+      <div class="addFitb hidden" data-deck="${d.id}">
+        <label>Question (use ___ for the blank)</label><input class="fq" data-id="${d.id}" placeholder="The capital of France is ___.">
+        <label>Accepted answers (comma-separated — list every acceptable variant)</label><input class="fa" data-id="${d.id}" placeholder="Paris, paris">
+        <button class="btn" style="margin-top:8px;" data-act="addfitb" data-id="${d.id}">Add card</button>
+      </div>
+      <div style="margin-top:14px;">${d.cards.map(c=> c.id===editingCardId ? cardEditForm(d,c) : `<div class="deck-list-item">
+        <div style="flex:1;min-width:0;">${cardSummary(c)}</div>
+        <div class="row" style="gap:6px;justify-content:flex-end;"><button class="btn secondary" data-act="editcard" data-id="${d.id}" data-cid="${c.id}">Edit</button>
+        <button class="btn danger" data-act="delcard" data-id="${d.id}" data-cid="${c.id}">✕</button></div></div>`).join('')}</div>
+    </div></details></div>`).join('');
+
+  wrap.querySelectorAll('.typeBtn').forEach(b=>b.onclick=()=>{
+    const deckId=b.dataset.deck, type=b.dataset.type;
+    wrap.querySelectorAll(`.typeBtn[data-deck="${deckId}"]`).forEach(x=>x.classList.toggle('active', x===b));
+    wrap.querySelector(`.addBasic[data-deck="${deckId}"]`).classList.toggle('hidden', type!=='basic');
+    wrap.querySelector(`.addMcq[data-deck="${deckId}"]`).classList.toggle('hidden', type!=='mcq');
+    wrap.querySelector(`.addFitb[data-deck="${deckId}"]`).classList.toggle('hidden', type!=='fitb');
+  });
   wrap.querySelectorAll('[data-act="del"]').forEach(b=>b.onclick=()=>{ if(confirm('Delete this deck?')){ delete state.decks[b.dataset.id]; saveDecks(); renderDecks(); } });
   wrap.querySelectorAll('[data-act="addcard"]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.id, f=wrap.querySelector(`.cf[data-id="${id}"]`), bk=wrap.querySelector(`.cb[data-id="${id}"]`);
     if(!f.value.trim()||!bk.value.trim()) return;
-    state.decks[id].cards.push({id:uid(),front:f.value.trim(),back:bk.value.trim(),interval:0,ease:2.5,due:0,reps:0});
+    state.decks[id].cards.push({id:uid(),type:'basic',front:f.value.trim(),back:bk.value.trim(),interval:0,ease:2.5,due:0,reps:0});
     saveDecks(); renderDecks();
   });
-  wrap.querySelectorAll('[data-act="delcard"]').forEach(b=>b.onclick=()=>{ const d=state.decks[b.dataset.id]; d.cards=d.cards.filter(c=>c.id!==b.dataset.cid); saveDecks(); renderDecks(); });
-  wrap.querySelectorAll('[data-act="export"]').forEach(b=>b.onclick=()=>exportDeck(b.dataset.id));
+  wrap.querySelectorAll('[data-act="addmcq"]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.id;
+    const q=wrap.querySelector(`.mq[data-id="${id}"]`).value.trim();
+    const opts=Array.from(wrap.querySelectorAll(`.mo[data-id="${id}"]`)).map(i=>i.value.trim());
+    const correctRadio=wrap.querySelector(`.mcr[data-id="${id}"]:checked`);
+    if(!q || opts.some(o=>!o) || !correctRadio){ alert('Fill in the question and all 4 options, and mark the correct one.'); return; }
+    const correctIndex=parseInt(correctRadio.value,10);
+    state.decks[id].cards.push({id:uid(),type:'mcq',front:q,options:opts,correctIndex,back:opts[correctIndex],interval:0,ease:2.5,due:0,reps:0});
+    saveDecks(); renderDecks();
+  });
+  wrap.querySelectorAll('[data-act="addfitb"]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.id;
+    const q=wrap.querySelector(`.fq[data-id="${id}"]`).value.trim();
+    const answers=wrap.querySelector(`.fa[data-id="${id}"]`).value.split(',').map(s=>s.trim()).filter(Boolean);
+    if(!q || !answers.length){ alert('Fill in the question and at least one accepted answer.'); return; }
+    state.decks[id].cards.push({id:uid(),type:'fitb',front:q,answers,back:answers[0],interval:0,ease:2.5,due:0,reps:0});
+    saveDecks(); renderDecks();
+  });
+  wrap.querySelectorAll('[data-act="editcard"]').forEach(b=>b.onclick=()=>{ editingCardId=b.dataset.cid; renderDecks(); });
+  wrap.querySelectorAll('[data-act="canceledit"]').forEach(b=>b.onclick=()=>{ editingCardId=null; renderDecks(); });
+  wrap.querySelectorAll('[data-act="savebasic"]').forEach(b=>b.onclick=()=>{
+    const cid=b.dataset.id, deckId=b.dataset.deck;
+    const front=wrap.querySelector(`.editFront[data-id="${cid}"]`).value.trim();
+    const back=wrap.querySelector(`.editBack[data-id="${cid}"]`).value.trim();
+    if(!front||!back) return;
+    const c=state.decks[deckId].cards.find(x=>x.id===cid);
+    c.front=front; c.back=back;
+    saveDecks(); editingCardId=null; renderDecks();
+  });
+  wrap.querySelectorAll('[data-act="savemcq"]').forEach(b=>b.onclick=()=>{
+    const cid=b.dataset.id, deckId=b.dataset.deck;
+    const front=wrap.querySelector(`.editFront[data-id="${cid}"]`).value.trim();
+    const opts=Array.from(wrap.querySelectorAll(`.editOpt[data-id="${cid}"]`)).sort((a,b2)=>(+a.dataset.idx)-(+b2.dataset.idx)).map(i=>i.value.trim());
+    const correctRadio=wrap.querySelector(`input[name="editCorrect-${cid}"]:checked`);
+    if(!front || opts.some(o=>!o) || !correctRadio) return;
+    const correctIndex=parseInt(correctRadio.value,10);
+    const c=state.decks[deckId].cards.find(x=>x.id===cid);
+    c.front=front; c.options=opts; c.correctIndex=correctIndex; c.back=opts[correctIndex];
+    saveDecks(); editingCardId=null; renderDecks();
+  });
+  wrap.querySelectorAll('[data-act="savefitb"]').forEach(b=>b.onclick=()=>{
+    const cid=b.dataset.id, deckId=b.dataset.deck;
+    const front=wrap.querySelector(`.editFront[data-id="${cid}"]`).value.trim();
+    const answers=wrap.querySelector(`.editAnswers[data-id="${cid}"]`).value.split(',').map(s=>s.trim()).filter(Boolean);
+    if(!front || !answers.length) return;
+    const c=state.decks[deckId].cards.find(x=>x.id===cid);
+    c.front=front; c.answers=answers; c.back=answers[0];
+    saveDecks(); editingCardId=null; renderDecks();
+  });
+  wrap.querySelectorAll('[data-act="delcard"]').forEach(b=>b.onclick=()=>{
+    const d=state.decks[b.dataset.id]; d.cards=d.cards.filter(c=>c.id!==b.dataset.cid);
+    if(editingCardId===b.dataset.cid) editingCardId=null;
+    saveDecks(); renderDecks();
+  });
+  wrap.querySelectorAll('[data-act="export"]').forEach(b=>b.onclick=()=>exportDeckCSV(b.dataset.id));
+  wrap.querySelectorAll('[data-act="exportmc"]').forEach(b=>b.onclick=()=>exportDeckMC(b.dataset.id));
 }
-function exportDeck(id){
+function csvQuote(v){ return '"' + String(v==null?'':v).replace(/"/g,'""') + '"'; }
+function downloadCSV(filename, content){
+  const blob=new Blob([content],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; a.click();
+}
+function exportDeckCSV(id){
   const d=state.decks[id];
-  const csv=d.cards.map(c=>`"${c.front.replace(/"/g,'""')}","${c.back.replace(/"/g,'""')}"`).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=d.name+'.csv'; a.click();
+  const rows=d.cards.map(c=>{
+    let back;
+    if(c.type==='mcq') back=c.options[c.correctIndex]||'';
+    else if(c.type==='fitb') back=(c.answers||[]).join(' / ');
+    else back=c.back;
+    return [c.front, back].map(csvQuote).join(',');
+  });
+  downloadCSV(d.name+'.csv', rows.join('\n'));
+}
+function exportDeckMC(id){
+  const d=state.decks[id];
+  const header=['Question','Answer 1','Answer 2','Answer 3','Answer 4','Correct Answer'].map(csvQuote).join(',');
+  const rows=d.cards.map(c=>{
+    let opts, correct;
+    if(c.type==='mcq'){ opts=c.options.slice(0,4); while(opts.length<4) opts.push(''); correct=c.options[c.correctIndex]||''; }
+    else if(c.type==='fitb'){ const a=(c.answers&&c.answers[0])||''; opts=[a,'','','']; correct=a; }
+    else{ opts=[c.back,'','','']; correct=c.back; }
+    return [c.front, ...opts, correct].map(csvQuote).join(',');
+  });
+  downloadCSV(d.name+'-multiplechoice.csv', [header, ...rows].join('\n'));
 }
 
 // ---------- IMPORT ----------
@@ -226,6 +444,13 @@ function renderAI(){
     <div class="filelist" id="aiFileList"></div>
     <label>Extra notes (optional)</label>
     <textarea id="aiInput" placeholder="Any extra context or a topic to focus on"></textarea>
+    <label>Card type</label>
+    <div class="type-toggle">
+      <button type="button" class="typeBtn active" data-type="basic">Basic</button>
+      <button type="button" class="typeBtn" data-type="mcq">Multiple choice</button>
+      <button type="button" class="typeBtn" data-type="fitb">Fill in the blank</button>
+    </div>
+    <input type="hidden" id="aiCardType" value="basic">
     <p class="sub">The AI decides how many cards to make based on the material, and checks your existing decks to avoid duplicating cards you already have.</p>
     <label>Save into</label>
     <select id="aiDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck</option></select>
@@ -235,9 +460,14 @@ function renderAI(){
   const sel=document.getElementById('aiDeckSel');
   sel.onchange=()=>document.getElementById('aiNewName').classList.toggle('hidden', sel.value!=='__new');
   document.getElementById('aiFileInput').onchange=(e)=>{ aiFiles=Array.from(e.target.files); document.getElementById('aiFileList').innerHTML=aiFiles.map(f=>`<span>${escapeHtml(f.name)}</span>`).join(''); };
+  el.querySelectorAll('.typeBtn').forEach(b=>b.onclick=()=>{
+    el.querySelectorAll('.typeBtn').forEach(x=>x.classList.toggle('active', x===b));
+    document.getElementById('aiCardType').value=b.dataset.type;
+  });
 
   document.getElementById('aiBtn').onclick=async ()=>{
     const notes=document.getElementById('aiInput').value.trim();
+    const cardType=document.getElementById('aiCardType').value;
     const btn=document.getElementById('aiBtn');
     btn.disabled=true; document.getElementById('aiStatus').innerHTML='<span class="spinner"></span> Reading files…';
     try{
@@ -256,7 +486,29 @@ function renderAI(){
       ).join('\n');
 
       document.getElementById('aiStatus').innerHTML='<span class="spinner"></span> Generating cards…';
-      const promptText = `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality flashcards.
+      const promptText = cardType==='mcq' ? `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality multiple-choice questions.
+Decide the number of questions yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive questions).
+Each question needs exactly 4 answer options with exactly one correct answer. Make the incorrect options plausible, not silly or obviously wrong.
+Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
+Existing decks:
+${existingSummary || '(none yet)'}
+
+Material:
+${combinedText.slice(0,12000)}
+
+Respond with ONLY a JSON array like [{"question":"...","options":["...","...","...","..."],"answer":"..."}] and nothing else — no markdown, no commentary. "answer" must exactly match one of the strings in "options".`
+      : cardType==='fitb' ? `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality fill-in-the-blank questions.
+Decide the number of questions yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive questions).
+Each question is a sentence from the material with the key term or phrase replaced by ___ (three underscores). For each question, also give an "answers" array listing EVERY acceptable way to fill in that blank correctly — include reasonable synonyms, alternate spellings, abbreviations, singular/plural forms, and with/without accents, so a correct answer isn't marked wrong just for wording. Include at least 2 entries in "answers" whenever a genuine alternate wording exists.
+Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
+Existing decks:
+${existingSummary || '(none yet)'}
+
+Material:
+${combinedText.slice(0,12000)}
+
+Respond with ONLY a JSON array like [{"question":"...___...","answers":["...","..."]}] and nothing else — no markdown, no commentary.`
+      : `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality flashcards.
 Decide the number of cards yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive cards).
 Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
 Existing decks:
@@ -282,20 +534,50 @@ Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing e
       if(!resp.ok) throw new Error(data.error || ('API error '+resp.status));
       const raw = data.choices?.[0]?.message?.content || '';
       const match = raw.match(/\[[\s\S]*\]/);
-      const cards = JSON.parse(match ? match[0] : raw);
-      if(!Array.isArray(cards) || !cards.length) throw new Error('no cards');
+      const parsed = JSON.parse(match ? match[0] : raw);
+      if(!Array.isArray(parsed) || !parsed.length) throw new Error('no cards');
+
+      let cards;
+      if(cardType==='mcq'){
+        cards = parsed.map(c=>{
+          const options=Array.isArray(c.options) ? c.options.map(o=>String(o).trim()).filter(Boolean) : [];
+          let correctIndex=options.findIndex(o=>o.toLowerCase()===String(c.answer||'').trim().toLowerCase());
+          if(correctIndex<0) correctIndex=0;
+          return { type:'mcq', front:String(c.question||'').trim(), options, correctIndex };
+        }).filter(c=>c.front && c.options.length>=2);
+      }else if(cardType==='fitb'){
+        cards = parsed.map(c=>({
+          type:'fitb',
+          front:String(c.question||'').trim(),
+          answers: Array.isArray(c.answers) ? c.answers.map(a=>String(a).trim()).filter(Boolean) : []
+        })).filter(c=>c.front && c.answers.length);
+      }else{
+        cards = parsed.map(c=>({ type:'basic', front:String(c.front||'').trim(), back:String(c.back||'').trim() })).filter(c=>c.front && c.back);
+      }
+      if(!cards.length) throw new Error('no usable cards');
 
       document.getElementById('aiStatus').textContent = `Generated ${cards.length} card(s). Review below, then save.`;
       const preview = document.getElementById('aiPreview');
-      preview.innerHTML = `<div class="overflow-x"><table><tr><th>Front</th><th>Back</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front||'')}</td><td>${escapeHtml(c.back||'')}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`;
+      preview.innerHTML = cardType==='mcq'
+        ? `<div class="overflow-x"><table><tr><th>Question</th><th>Options</th><th>Correct</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${c.options.map(o=>escapeHtml(o)).join('<br>')}</td><td>${escapeHtml(c.options[c.correctIndex])}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`
+        : cardType==='fitb'
+        ? `<div class="overflow-x"><table><tr><th>Question</th><th>Accepted answers</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${c.answers.map(a=>escapeHtml(a)).join(', ')}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`
+        : `<div class="overflow-x"><table><tr><th>Front</th><th>Back</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${escapeHtml(c.back)}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`;
+
       document.getElementById('aiSaveBtn').onclick=()=>{
         let deckId=sel.value;
         if(deckId==='__new'){ const nm=document.getElementById('aiNewName').value.trim(); if(!nm){alert('Name the new deck first.');return;} deckId=ensureDeck(nm); }
         const existingFronts = new Set(state.decks[deckId].cards.map(c=>c.front.toLowerCase().trim()));
         let saved=0;
         cards.forEach(c=>{
-          if(c.front && c.back && !existingFronts.has(String(c.front).toLowerCase().trim())){
-            state.decks[deckId].cards.push({id:uid(), front:c.front, back:c.back, interval:0, ease:2.5, due:0, reps:0});
+          if(!existingFronts.has(c.front.toLowerCase().trim())){
+            if(c.type==='mcq'){
+              state.decks[deckId].cards.push({id:uid(), type:'mcq', front:c.front, options:c.options, correctIndex:c.correctIndex, back:c.options[c.correctIndex], interval:0, ease:2.5, due:0, reps:0});
+            }else if(c.type==='fitb'){
+              state.decks[deckId].cards.push({id:uid(), type:'fitb', front:c.front, answers:c.answers, back:c.answers[0], interval:0, ease:2.5, due:0, reps:0});
+            }else{
+              state.decks[deckId].cards.push({id:uid(), type:'basic', front:c.front, back:c.back, interval:0, ease:2.5, due:0, reps:0});
+            }
             saved++;
           }
         });
