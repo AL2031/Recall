@@ -62,7 +62,6 @@ details summary{font-weight:700;color:var(--accent-dark);}
     <button data-tab="decks">Decks</button>
     <button data-tab="import">Import</button>
     <button data-tab="ai">AI Create</button>
-    <button data-tab="settings">Settings</button>
   </nav>
 </header>
 <main>
@@ -70,18 +69,16 @@ details summary{font-weight:700;color:var(--accent-dark);}
   <div id="tab-decks" class="hidden"></div>
   <div id="tab-import" class="hidden"></div>
   <div id="tab-ai" class="hidden"></div>
-  <div id="tab-settings" class="hidden"></div>
 </main>
 <script>
-const LS_KEY='recall_decks_v1', SET_KEY='recall_settings_v1';
+const LS_KEY='recall_decks_v1';
+const MODEL='openai/gpt-oss-120b', VISION_MODEL='qwen/qwen3.8-27b';
 let state = load(LS_KEY, {decks:{}});
-let settings = load(SET_KEY, {model:'openai/gpt-oss-120b', visionModel:'qwen/qwen3.8-27b'});
 let studySession = null;
 let aiFiles = [];
 
 function load(key, fallback){ try{ return JSON.parse(localStorage.getItem(key)) || fallback; }catch(e){ return fallback; } }
 function saveDecks(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-function saveSettings(){ localStorage.setItem(SET_KEY, JSON.stringify(settings)); }
 function uid(){ return Math.random().toString(36).slice(2,10); }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function ensureDeck(name){ const id=uid(); state.decks[id]={id,name,cards:[]}; saveDecks(); return id; }
@@ -206,21 +203,6 @@ function splitCsvLine(line){
   out.push(cur); return out;
 }
 
-// ---------- SETTINGS ----------
-function renderSettings(){
-  const el=document.getElementById('tab-settings');
-  el.innerHTML=`<div class="card">
-    <p class="sub">Your Groq API key is never entered here. It's stored as an environment variable (<code>GROQ_API_KEY</code>) on your host, and a small serverless function at <code>/api/generate</code> uses it server-side to call Groq for you.</p>
-    <label>Text model</label><input id="setModel" value="${escapeHtml(settings.model)}" placeholder="e.g. openai/gpt-oss-120b">
-    <label>Vision model (used only when you attach images — leave blank to reuse text model)</label><input id="setVision" value="${escapeHtml(settings.visionModel)}" placeholder="optional">
-    <button class="btn" id="saveSetBtn" style="margin-top:10px;">Save settings</button>
-    <p class="sub" id="setStatus"></p></div>`;
-  document.getElementById('saveSetBtn').onclick=()=>{
-    settings={model:document.getElementById('setModel').value.trim(), visionModel:document.getElementById('setVision').value.trim()};
-    saveSettings(); document.getElementById('setStatus').textContent='Saved.';
-  };
-}
-
 // ---------- AI CREATE ----------
 async function extractPdfText(file){
   const buf = await file.arrayBuffer();
@@ -238,21 +220,18 @@ function readAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileRe
 
 function renderAI(){
   const el=document.getElementById('tab-ai'), decks=Object.values(state.decks);
-  const ready = !!settings.model;
   el.innerHTML=`<div class="card">
-    ${ready?'':'<p class="sub">Set a text model in Settings first.</p>'}
     <label>Attach files (text, .md, .csv, PDF, or images)</label>
-    <input type="file" id="aiFileInput" multiple accept=".txt,.md,.csv,.pdf,image/*" ${ready?'':'disabled'}>
+    <input type="file" id="aiFileInput" multiple accept=".txt,.md,.csv,.pdf,image/*">
     <div class="filelist" id="aiFileList"></div>
     <label>Extra notes (optional)</label>
-    <textarea id="aiInput" placeholder="Any extra context or a topic to focus on" ${ready?'':'disabled'}></textarea>
+    <textarea id="aiInput" placeholder="Any extra context or a topic to focus on"></textarea>
     <p class="sub">The AI decides how many cards to make based on the material, and checks your existing decks to avoid duplicating cards you already have.</p>
     <label>Save into</label>
-    <select id="aiDeckSel" ${ready?'':'disabled'}>${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck</option></select>
+    <select id="aiDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck</option></select>
     <input id="aiNewName" class="hidden" placeholder="New deck name" style="margin-top:8px;">
-    <button class="btn" id="aiBtn" style="margin-top:10px;" ${ready?'':'disabled'}>Generate cards</button>
+    <button class="btn" id="aiBtn" style="margin-top:10px;">Generate cards</button>
     <p class="sub" id="aiStatus"></p><div id="aiPreview"></div></div>`;
-  if(!ready) return;
   const sel=document.getElementById('aiDeckSel');
   sel.onchange=()=>document.getElementById('aiNewName').classList.toggle('hidden', sel.value!=='__new');
   document.getElementById('aiFileInput').onchange=(e)=>{ aiFiles=Array.from(e.target.files); document.getElementById('aiFileList').innerHTML=aiFiles.map(f=>`<span>${escapeHtml(f.name)}</span>`).join(''); };
@@ -289,7 +268,7 @@ ${combinedText.slice(0,12000)}
 Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing else — no markdown, no commentary.`;
 
       const useVision = images.length>0;
-      const model = useVision ? (settings.visionModel || settings.model) : settings.model;
+      const model = useVision ? (VISION_MODEL || MODEL) : MODEL;
       const content = useVision
         ? [{type:'text', text:promptText}, ...images.map(u=>({type:'image_url', image_url:{url:u}}))]
         : promptText;
@@ -331,14 +310,14 @@ Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing e
   };
 }
 
-const renderers={study:renderStudy, decks:renderDecks, import:renderImport, ai:renderAI, settings:renderSettings};
+const renderers={study:renderStudy, decks:renderDecks, import:renderImport, ai:renderAI};
 document.getElementById('tabs').addEventListener('click', e=>{
   const b=e.target.closest('button[data-tab]'); if(!b) return;
   document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
   Object.keys(renderers).forEach(k=>document.getElementById('tab-'+k).classList.toggle('hidden', k!==b.dataset.tab));
   renderers[b.dataset.tab]();
 });
-renderStudy(); renderDecks(); renderImport(); renderAI(); renderSettings();
+renderStudy(); renderDecks(); renderImport(); renderAI();
 </script>
 </body>
 </html>
