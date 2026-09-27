@@ -101,6 +101,103 @@ details summary{font-weight:700;color:var(--accent-dark);}
 .deck-row+.deck-row{border-top:1px solid var(--border);}
 .deck-row-icon{flex:none;width:36px;height:36px;border-radius:8px;background:var(--accent-soft);color:var(--accent-dark);display:flex;align-items:center;justify-content:center;}
 .deck-row-icon svg{width:18px;height:18px;}
+
+/* UX refresh */
+html{scroll-behavior:smooth;}
+body{min-height:100vh;line-height:1.45;}
+header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;padding:10px 18px;border-bottom:2px solid var(--accent);box-shadow:0 4px 18px rgba(0,0,0,.10);}
+.brand{margin:0;}
+nav{min-width:0;justify-content:center;}
+nav button{min-height:38px;padding:8px 12px;border-radius:8px;transition:background .16s ease,color .16s ease,transform .16s ease;}
+nav button:active{transform:translateY(1px);}
+.header-actions{display:flex;align-items:center;gap:8px;}
+.icon-btn{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--header-ink);border-radius:9px;cursor:pointer;font-family:inherit;}
+.icon-btn:hover{background:rgba(255,255,255,.12);}
+.icon-btn svg{width:18px;height:18px;}
+main{max-width:880px;padding:24px 18px 80px;}
+.card{border-radius:14px;padding:20px;margin-bottom:14px;box-shadow:0 8px 24px rgba(0,0,0,.045);}
+.panel-icon{width:44px;height:44px;border-radius:12px;}
+.panel-title{font-size:19px;}
+.panel-sub{line-height:1.45;}
+button.btn{min-height:42px;border-radius:9px;transition:transform .14s ease,box-shadow .14s ease,background .14s ease;}
+button.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 14px rgba(0,0,0,.10);}
+button.btn.secondary,button.btn.danger{background:var(--panel);}
+input,textarea,select{border-radius:9px;min-height:42px;transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;}
+textarea{min-height:120px;}
+input:focus,textarea:focus,select:focus,button:focus-visible,.mcq-opt:focus-visible,.dropzone:focus-within{outline:2px solid var(--accent);outline-offset:2px;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);}
+label{margin-top:14px;}
+.row{gap:10px;}
+.chip{border-radius:999px;padding:4px 9px;}
+.study-card{min-height:300px;border-radius:14px;margin-top:12px;padding:42px 26px;font-size:clamp(20px,3vw,28px);line-height:1.35;box-shadow:inset 0 0 0 1px var(--border);transition:transform .15s ease,box-shadow .15s ease,background .15s ease;}
+.study-card:hover{transform:translateY(-1px);box-shadow:inset 0 0 0 1px var(--accent),0 10px 24px rgba(0,0,0,.06);}
+.study-helper{text-align:center;margin:9px 0 0;}
+.study-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;}
+.study-progress{height:7px;background:var(--border);border-radius:999px;overflow:hidden;margin:4px 0 14px;}
+.study-progress > span{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .2s ease;}
+.study-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.study-exit{font-size:13px;font-weight:700;color:var(--sub);background:none;border:0;padding:6px 0;cursor:pointer;font-family:inherit;}
+.study-exit:hover{color:var(--danger);}
+.grade-row{gap:9px;margin-top:16px;}
+.grade-row button{min-height:58px;border-radius:11px;display:flex;flex-direction:column;line-height:1.15;}
+.grade-row .grade-label{font-size:14px;font-weight:800;}
+.grade-row .grade-time{opacity:.86;font-size:11px;margin-top:4px;font-weight:600;}
+.mcq-options{gap:10px;}
+.mcq-opt{min-height:52px;border-radius:10px;padding:13px 15px;font-weight:600;transition:border-color .14s ease,transform .14s ease,background .14s ease;}
+.mcq-opt:hover:not(:disabled){transform:translateX(2px);}
+.type-toggle{background:var(--bg);padding:4px;border-radius:11px;border:1px solid var(--border);gap:4px;}
+.type-toggle button{border:0;border-radius:8px;min-height:42px;}
+.type-toggle button.active{box-shadow:0 3px 10px rgba(0,0,0,.10);}
+.deck-row{padding:14px 4px;align-items:flex-start;}
+.deck-row-icon{width:42px;height:42px;border-radius:11px;}
+.deck-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
+.deck-actions .btn{min-height:36px;padding:8px 10px;font-size:12px;}
+.deck-list-item{padding:13px 4px;align-items:flex-start;gap:10px;}
+.empty-state{padding:42px 18px 28px;}
+.empty-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px;}
+.dropzone{border-radius:11px;padding:14px;min-height:62px;transition:border-color .15s ease,background .15s ease,transform .15s ease;}
+.dropzone.is-dragover{border-color:var(--accent);background:var(--accent-soft);transform:scale(1.005);}
+.dropzone-btn{min-height:38px;border-radius:8px;}
+.filelist span{border-radius:999px;padding:4px 9px;}
+.import-tip{padding:10px 12px;margin-top:10px;border:1px solid var(--border);border-radius:9px;background:var(--accent-soft);}
+.deck-filter{display:flex;gap:8px;align-items:center;margin-top:10px;}
+.deck-filter input{margin:0;}
+.dashboard-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0;}
+.stat-card{padding:14px;border:1px solid var(--border);border-radius:11px;background:var(--bg);}
+.stat-value{font-size:24px;font-weight:800;line-height:1.1;}
+.stat-label{font-size:12px;color:var(--sub);margin-top:4px;}
+.quick-deck{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--border);}
+.quick-deck:first-of-type{border-top:0;}
+.toast{position:fixed;left:50%;bottom:24px;z-index:20;transform:translate(-50%,18px);opacity:0;pointer-events:none;background:var(--header-bg);color:var(--header-ink);border:1px solid rgba(255,255,255,.10);box-shadow:0 14px 34px rgba(0,0,0,.22);padding:11px 14px;border-radius:10px;font-size:13px;font-weight:700;transition:opacity .18s ease,transform .18s ease;max-width:min(92vw,520px);text-align:center;}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:30;display:flex;align-items:center;justify-content:center;padding:18px;}
+.modal{width:min(100%,460px);background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.25);}
+.modal h3{margin:0 0 6px;font-size:18px;}
+.modal p{margin:0;color:var(--sub);font-size:13px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+.modal #modalConfirm{background:var(--danger);color:#fff;border-color:var(--danger);border-bottom-color:#8f2a22;}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border:1px solid var(--border);border-bottom-width:2px;border-radius:6px;background:var(--panel);font-size:11px;font-weight:800;color:var(--sub);}
+.study-shortcuts{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;color:var(--sub);font-size:11px;margin-top:12px;}
+@media (max-width:720px){
+  header{grid-template-columns:1fr auto;gap:8px;padding:9px 12px;}
+  nav{grid-column:1/-1;grid-row:2;justify-content:flex-start;border-top:1px solid rgba(255,255,255,.08);padding-top:6px;}
+  nav button{padding:8px 11px;}
+  main{padding:16px 12px 72px;}
+  .card{padding:16px;border-radius:12px;}
+  .dashboard-grid{grid-template-columns:1fr 1fr;}
+  .grade-row{grid-template-columns:1fr 1fr;}
+  .study-card{min-height:240px;padding:32px 18px;}
+  .deck-actions{width:100%;justify-content:flex-start;margin-top:8px;}
+  .panel-header-row{align-items:stretch;}
+  .panel-header-row > .btn{width:100%;}
+}
+@media (max-width:460px){
+  .dashboard-grid{grid-template-columns:1fr;}
+  .type-toggle{display:grid;grid-template-columns:1fr 1fr;}
+  .grade-row button{min-height:54px;}
+  .study-top{align-items:flex-start;}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important;}}
+
 </style>
 </head>
 <body>
@@ -115,7 +212,14 @@ details summary{font-weight:700;color:var(--accent-dark);}
     <button data-tab="import"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.6 4.4 0 0 1-1.3-8.9A5 5 0 0 1 15.9 7a4.5 4.5 0 0 1 2.1 8.6"/><polyline points="9 15 12 12 15 15"/><line x1="12" y1="12" x2="12" y2="21"/></svg>Import</button>
     <button data-tab="ai"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c.4 3.2 1.1 5.6 2.2 7.1 1.1 1.5 2.7 2.5 4.8 3.2-2.1.7-3.7 1.7-4.8 3.2-1.1 1.5-1.8 3.9-2.2 7.1-.4-3.2-1.1-5.6-2.2-7.1-1.1-1.5-2.7-2.5-4.8-3.2 2.1-.7 3.7-1.7 4.8-3.2 1.1-1.5 1.8-3.9 2.2-7.1Z"/></svg>AI Create</button>
   </nav>
+  <div class="header-actions">
+    <button class="icon-btn" id="themeToggle" type="button" title="Toggle theme" aria-label="Toggle theme">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+  </div>
 </header>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="modalRoot"></div>
 <main>
   <div id="tab-study"></div>
   <div id="tab-decks" class="hidden"></div>
@@ -134,6 +238,62 @@ function saveDecks(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 function uid(){ return Math.random().toString(36).slice(2,10); }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function ensureDeck(name){ const id=uid(); state.decks[id]={id,name,cards:[]}; saveDecks(); return id; }
+
+let deckQuery='';
+let toastTimer=null;
+function toast(message, tone='info'){
+  const el=document.getElementById('toast'); if(!el) return;
+  el.textContent=message;
+  el.className='toast show '+tone;
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+}
+function showConfirm(title, message, onConfirm){
+  const root=document.getElementById('modalRoot');
+  root.innerHTML=`<div class="modal-backdrop" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">${escapeHtml(title)}</h3><p>${escapeHtml(message)}</p>
+    <div class="modal-actions"><button class="btn secondary" id="modalCancel">Cancel</button><button class="btn danger" id="modalConfirm">Confirm</button></div>
+  </div></div>`;
+  const close=()=>root.innerHTML='';
+  document.getElementById('modalCancel').onclick=close;
+  document.getElementById('modalConfirm').onclick=()=>{ close(); onConfirm(); };
+  root.querySelector('.modal-backdrop').onclick=e=>{ if(e.target===e.currentTarget) close(); };
+  document.addEventListener('keydown', function esc(ev){ if(ev.key==='Escape'){ close(); document.removeEventListener('keydown',esc); } });
+  document.getElementById('modalConfirm').focus();
+}
+function switchTab(tab){ document.querySelector(`#tabs button[data-tab="${tab}"]`)?.click(); }
+function startStudy(deckId, includeAll=false){
+  const deck=state.decks[deckId];
+  if(!deck) return;
+  const pool=includeAll?deck.cards.slice():dueCards(deck);
+  if(!pool.length){ toast('Nothing is due in this deck right now.'); return; }
+  studySession={deckId, queue:shuffle(pool.map(c=>c.id)), pos:0, showBack:false, selected:null, optionOrder:null, typed:'', total:pool.length};
+  switchTab('study');
+  renderStudy();
+}
+function gradeIntervalLabel(card, rating){
+  const MIN=60000,HR=60*MIN,DAY=24*HR;
+  const current=card.interval||0, ease=card.ease==null?2.5:card.ease;
+  let ms;
+  if(rating===0) ms=10*MIN;
+  else if(current===0) ms=rating===1?8*HR:rating===2?DAY:4*DAY;
+  else ms=Math.round(current*(rating===1?1.2:rating===2?ease:ease*1.3));
+  if(ms<HR) return `${Math.max(1,Math.round(ms/MIN))}m`;
+  if(ms<DAY) return `${Math.max(1,Math.round(ms/HR))}h`;
+  return `${Math.max(1,Math.round(ms/DAY))}d`;
+}
+function initTheme(){
+  const saved=localStorage.getItem('recall_theme');
+  if(saved==='light'||saved==='dark') document.documentElement.dataset.theme=saved;
+  const icon=document.getElementById('themeIcon');
+  const dark=document.documentElement.dataset.theme==='dark' || (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+  if(icon) icon.innerHTML=dark?'<path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"/>':'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>';
+}
+function toggleTheme(){
+  const current=document.documentElement.dataset.theme;
+  const systemDark=matchMedia('(prefers-color-scheme: dark)').matches;
+  const next=(current?current:(systemDark?'dark':'light'))==='dark'?'light':'dark';
+  document.documentElement.dataset.theme=next; localStorage.setItem('recall_theme',next); initTheme();
+}
 
 const ICONS={
   layers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
@@ -178,28 +338,32 @@ function renderStudy(){
     if(!decks.length){
       el.innerHTML=`<div class="card">${panelHeader('card','Study','Pick a deck to start a spaced-repetition session.')}
         <div class="empty-state"><div class="empty-illustration"><span class="ei-card">${ICONS.card}</span><span class="ei-spark a">${ICONS.sparkle}</span><span class="ei-spark b">${ICONS.sparkle}</span></div>
-        <h3>No decks yet</h3><p>Create your first deck to start studying, or let AI generate one for you.</p></div></div>`;
+        <h3>No decks yet</h3><p>Create your first deck to start studying, or let AI generate one for you.</p>
+        <div class="empty-actions"><button class="btn" id="emptyCreateDeck">${ICONS.plus} Create deck</button><button class="btn secondary" id="emptyCreateAI">${ICONS.sparkle} Create with AI</button></div></div></div>`;
+      document.getElementById('emptyCreateDeck').onclick=()=>switchTab('decks');
+      document.getElementById('emptyCreateAI').onclick=()=>switchTab('ai');
       return;
     }
-    el.innerHTML=`<div class="card">${panelHeader('card','Study','Pick a deck to start a spaced-repetition session.')}
-      <label>Pick a deck</label>
-      <select id="studyDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${dueCards(d).length} due / ${d.cards.length})</option>`).join('')}</select>
-      <div class="row" style="margin-top:12px;"><button class="btn" id="startStudyBtn">${ICONS.card} Start studying</button>
-      <label style="margin:0;"><input type="checkbox" id="allCardsChk" style="width:auto;"> include not-yet-due</label></div></div>`;
+    el.innerHTML=`<div class="card">${panelHeader('card','Study','Choose where to focus, then let Recall handle the scheduling.')}
+      <label>Deck</label>
+      <select id="studyDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} · ${dueCards(d).length} due · ${d.cards.length} total</option>`).join('')}</select>
+      <div class="row" style="margin-top:12px;align-items:center;"><button class="btn" id="startStudyBtn">${ICONS.card} Start studying</button>
+      <label style="margin:0;display:flex;align-items:center;gap:7px;"><input type="checkbox" id="allCardsChk" style="width:auto;min-height:0;"> Include not-yet-due cards</label></div>
+      <p class="sub" style="margin:10px 0 0;">Tip: use <span class="kbd">Space</span> to reveal cards and <span class="kbd">1–4</span> to grade them.</p></div>
+      <div class="card"><div class="panel-title" style="margin-bottom:8px;">Up next</div>${decks.map(d=>`<div class="quick-deck"><div><strong>${escapeHtml(d.name)}</strong><div class="sub">${dueCards(d).length} due · ${d.cards.length} cards</div></div><button class="btn secondary" data-quick-study="${d.id}">${ICONS.card} Study</button></div>`).join('')}</div>`;
     document.getElementById('startStudyBtn').onclick=()=>{
       const deckId=document.getElementById('studyDeckSel').value, all=document.getElementById('allCardsChk').checked;
-      const deck=state.decks[deckId], pool=all?deck.cards.slice():dueCards(deck);
-      if(!pool.length){ alert('Nothing to study right now.'); return; }
-      studySession={deckId, queue:shuffle(pool.map(c=>c.id)), pos:0, showBack:false, selected:null, optionOrder:null, typed:'', total:pool.length};
-      renderStudy();
+      startStudy(deckId, all);
     };
+    el.querySelectorAll('[data-quick-study]').forEach(b=>b.onclick=()=>startStudy(b.dataset.quickStudy,false));
     return;
   }
   const deck=state.decks[studySession.deckId];
   if(!deck){ studySession=null; renderStudy(); return; }
   if(studySession.pos>=studySession.queue.length){
-    el.innerHTML=`<div class="card"><h3>Session complete 🎉</h3><p class="sub">Reviewed ${studySession.total} card(s).</p><button class="btn" id="doneBtn">Back</button></div>`;
-    document.getElementById('doneBtn').onclick=()=>{ studySession=null; renderStudy(); }; return;
+    el.innerHTML=`<div class="card"><div class="empty-state" style="padding-bottom:20px;"><div class="empty-illustration"><span class="ei-card">${ICONS.check}</span><span class="ei-spark a">${ICONS.sparkle}</span><span class="ei-spark b">${ICONS.sparkle}</span></div><h3>Session complete 🎉</h3><p class="sub">You reviewed ${studySession.total} card(s). Your next reviews are now scheduled.</p><div class="empty-actions"><button class="btn" id="doneBtn">Back to study</button><button class="btn secondary" id="doneDecksBtn">View decks</button></div></div></div>`;
+    document.getElementById('doneBtn').onclick=()=>{ studySession=null; renderStudy(); };
+    document.getElementById('doneDecksBtn').onclick=()=>{ studySession=null; switchTab('decks'); }; return;
   }
   const card=deck.cards.find(c=>c.id===studySession.queue[studySession.pos]);
   if(!card){ studySession.pos++; renderStudy(); return; }
@@ -213,32 +377,58 @@ function advanceCard(card, rating){
   renderStudy();
 }
 function renderStudyBasic(el, deck, card){
-  el.innerHTML=`<div class="card"><div class="row"><span class="chip">${escapeHtml(deck.name)}</span><span class="chip">${studySession.pos+1}/${studySession.queue.length}</span></div>
-    <div class="study-card" id="flipZone">${escapeHtml(studySession.showBack?card.back:card.front)}</div>
-    <p class="sub" style="text-align:center;">${studySession.showBack?'':'Tap card to reveal answer'}</p>
+  const progress=(studySession.pos/studySession.queue.length)*100;
+  const remaining=studySession.queue.length-studySession.pos;
+  el.innerHTML=`<div class="card">
+    <div class="study-top"><div class="study-meta"><span class="chip">${escapeHtml(deck.name)}</span><span class="sub">${studySession.pos+1} of ${studySession.queue.length}</span></div>
+      <button class="study-exit" id="exitStudyBtn">Exit session</button></div>
+    <div class="study-progress" aria-label="Study progress"><span style="width:${Math.max(4,progress)}%"></span></div>
+    <div class="study-card" id="flipZone" tabindex="0" role="button" aria-label="${studySession.showBack?'Answer revealed':'Reveal answer'}">${escapeHtml(studySession.showBack?card.back:card.front)}</div>
+    <p class="sub study-helper">${studySession.showBack?'How well did you know it?':'Click, tap, or press Space to reveal the answer.'}</p>
     <div class="grade-row ${studySession.showBack?'':'hidden'}" id="gradeRow">
-    <button class="btn grade-again" data-r="0">Again</button><button class="btn grade-hard" data-r="1">Hard</button>
-    <button class="btn grade-good" data-r="2">Good</button><button class="btn grade-easy" data-r="3">Easy</button></div></div>`;
-  document.getElementById('flipZone').onclick=()=>{ studySession.showBack=true; renderStudy(); };
+      <button class="btn grade-again" data-r="0"><span class="grade-label">Again</span><span class="grade-time">${gradeIntervalLabel(card,0)}</span></button>
+      <button class="btn grade-hard" data-r="1"><span class="grade-label">Hard</span><span class="grade-time">${gradeIntervalLabel(card,1)}</span></button>
+      <button class="btn grade-good" data-r="2"><span class="grade-label">Good</span><span class="grade-time">${gradeIntervalLabel(card,2)}</span></button>
+      <button class="btn grade-easy" data-r="3"><span class="grade-label">Easy</span><span class="grade-time">${gradeIntervalLabel(card,3)}</span></button>
+    </div>
+    <div class="study-shortcuts"><span><span class="kbd">Space</span> reveal</span><span><span class="kbd">1</span> again</span><span><span class="kbd">2</span> hard</span><span><span class="kbd">3</span> good</span><span><span class="kbd">4</span> easy</span></div>
+  </div>`;
+  const flip=document.getElementById('flipZone');
+  const reveal=()=>{ if(!studySession.showBack){ studySession.showBack=true; renderStudy(); } };
+  flip.onclick=reveal; flip.onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();reveal();}};
+  document.getElementById('exitStudyBtn').onclick=()=>{
+    if(studySession.pos>0){ showConfirm('Exit this session?','Your completed reviews are already saved. The remaining cards will stay due.',()=>{studySession=null;renderStudy();}); } else { studySession=null; renderStudy(); }
+  };
   const gr=document.getElementById('gradeRow');
   if(gr) gr.querySelectorAll('button').forEach(b=>b.onclick=()=>advanceCard(card, parseInt(b.dataset.r,10)));
 }
 function renderStudyMCQ(el, deck, card){
   if(!studySession.optionOrder) studySession.optionOrder = shuffle(card.options.map((_,i)=>i));
   const order=studySession.optionOrder, revealed=studySession.showBack, selected=studySession.selected;
-  el.innerHTML=`<div class="card"><div class="row"><span class="chip">${escapeHtml(deck.name)}</span><span class="chip">${studySession.pos+1}/${studySession.queue.length}</span></div>
-    <div class="study-card" style="cursor:default;">${escapeHtml(card.front)}</div>
-    <div class="mcq-options">${order.map(i=>{
+  const progress=(studySession.pos/studySession.queue.length)*100;
+  el.innerHTML=`<div class="card"><div class="study-top"><div class="study-meta"><span class="chip">${escapeHtml(deck.name)}</span><span class="sub">${studySession.pos+1} of ${studySession.queue.length}</span></div><button class="study-exit" id="exitStudyBtn">Exit session</button></div>
+    <div class="study-progress" aria-label="Study progress"><span style="width:${Math.max(4,progress)}%"></span></div>
+    <div class="study-card" style="cursor:default;min-height:190px;">${escapeHtml(card.front)}</div>
+    <div class="mcq-options" aria-label="Answer choices">${order.map((i,idx)=>{
       let cls='mcq-opt';
       if(revealed){ if(i===card.correctIndex) cls+=' correct'; else if(i===selected) cls+=' wrong'; }
-      return `<button type="button" class="${cls}" data-i="${i}" ${revealed?'disabled':''}>${escapeHtml(card.options[i])}</button>`;
+      return `<button type="button" class="${cls}" data-i="${i}" ${revealed?'disabled':''}><span style="opacity:.65;margin-right:8px;">${String.fromCharCode(65+idx)}.</span>${escapeHtml(card.options[i])}</button>`;
     }).join('')}</div>
+    ${revealed?'<p class="sub study-helper">The correct answer is highlighted. Now grade how well you knew it.</p>':'<p class="sub study-helper">Choose an answer. Recall will reveal the correct one automatically.</p>'}
+    <p class="sub study-helper">${revealed?'Grade this card based on how well you recalled it.':'Type your answer, then press Enter to check.'}</p>
     <div class="grade-row ${revealed?'':'hidden'}" id="gradeRow">
-    <button class="btn grade-again" data-r="0">Again</button><button class="btn grade-hard" data-r="1">Hard</button>
-    <button class="btn grade-good" data-r="2">Good</button><button class="btn grade-easy" data-r="3">Easy</button></div></div>`;
+      <button class="btn grade-again" data-r="0"><span class="grade-label">Again</span><span class="grade-time">${gradeIntervalLabel(card,0)}</span></button>
+      <button class="btn grade-hard" data-r="1"><span class="grade-label">Hard</span><span class="grade-time">${gradeIntervalLabel(card,1)}</span></button>
+      <button class="btn grade-good" data-r="2"><span class="grade-label">Good</span><span class="grade-time">${gradeIntervalLabel(card,2)}</span></button>
+      <button class="btn grade-easy" data-r="3"><span class="grade-label">Easy</span><span class="grade-time">${gradeIntervalLabel(card,3)}</span></button>
+    </div>
+    <div class="study-shortcuts"><span><span class="kbd">1–4</span> choose / grade</span><span><span class="kbd">Esc</span> exit</span></div></div>`;
   if(!revealed){
     el.querySelectorAll('.mcq-opt').forEach(b=>b.onclick=()=>{ studySession.selected=parseInt(b.dataset.i,10); studySession.showBack=true; renderStudy(); });
   }
+  document.getElementById('exitStudyBtn').onclick=()=>{
+    if(studySession.pos>0){ showConfirm('Exit this session?','Your completed reviews are already saved. The remaining cards will stay due.',()=>{studySession=null;renderStudy();}); } else { studySession=null; renderStudy(); }
+  };
   const gr=document.getElementById('gradeRow');
   if(gr) gr.querySelectorAll('button').forEach(b=>b.onclick=()=>advanceCard(card, parseInt(b.dataset.r,10)));
 }
@@ -250,19 +440,22 @@ function fitbMatch(card, guess){
 function renderStudyFITB(el, deck, card){
   const revealed=studySession.showBack;
   const correct=revealed ? fitbMatch(card, studySession.typed) : null;
-  el.innerHTML=`<div class="card"><div class="row"><span class="chip">${escapeHtml(deck.name)}</span><span class="chip">${studySession.pos+1}/${studySession.queue.length}</span></div>
-    <div class="study-card" style="cursor:default;">${escapeHtml(card.front)}</div>
+  const progress=(studySession.pos/studySession.queue.length)*100;
+  el.innerHTML=`<div class="card"><div class="study-top"><div class="study-meta"><span class="chip">${escapeHtml(deck.name)}</span><span class="sub">${studySession.pos+1} of ${studySession.queue.length}</span></div><button class="study-exit" id="exitStudyBtn">Exit session</button></div>
+    <div class="study-progress" aria-label="Study progress"><span style="width:${Math.max(4,progress)}%"></span></div>
+    <div class="study-card" style="cursor:default;min-height:190px;">${escapeHtml(card.front)}</div>
     <div style="margin-top:14px;">
       <input type="text" id="fitbInput" placeholder="Type your answer" ${revealed?'disabled':''} value="${escapeHtml(revealed?(studySession.typed||''):'')}" autocomplete="off">
       <div class="row" style="margin-top:8px;">
-        <button class="btn" id="fitbCheckBtn" ${revealed?'disabled':''}>Check answer</button>
+        <button class="btn" id="fitbCheckBtn" ${revealed?'disabled':''}>${ICONS.check} Check answer</button>
         <button class="btn secondary" id="fitbSkipBtn" ${revealed?'disabled':''}>I don't know</button>
       </div>
     </div>
     ${revealed?`<div class="fitb-feedback ${correct?'correct':'wrong'}">${correct?'Correct!':'Not quite.'}<div class="fitb-answers">Accepted: ${card.answers.map(a=>escapeHtml(a)).join(', ')}</div></div>`:''}
     <div class="grade-row ${revealed?'':'hidden'}" id="gradeRow">
-    <button class="btn grade-again" data-r="0">Again</button><button class="btn grade-hard" data-r="1">Hard</button>
-    <button class="btn grade-good" data-r="2">Good</button><button class="btn grade-easy" data-r="3">Easy</button></div></div>`;
+    <button class="btn grade-again" data-r="0"><span class="grade-label">Again</span><span class="grade-time">${gradeIntervalLabel(card,0)}</span></button><button class="btn grade-hard" data-r="1"><span class="grade-label">Hard</span><span class="grade-time">${gradeIntervalLabel(card,1)}</span></button>
+    <button class="btn grade-good" data-r="2"><span class="grade-label">Good</span><span class="grade-time">${gradeIntervalLabel(card,2)}</span></button><button class="btn grade-easy" data-r="3"><span class="grade-label">Easy</span><span class="grade-time">${gradeIntervalLabel(card,3)}</span></button></div>
+    <div class="study-shortcuts"><span><span class="kbd">Enter</span> check</span><span><span class="kbd">1–4</span> grade</span><span><span class="kbd">Esc</span> exit</span></div></div>`;
   if(!revealed){
     const input=document.getElementById('fitbInput');
     input.focus();
@@ -271,6 +464,9 @@ function renderStudyFITB(el, deck, card){
     input.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
     document.getElementById('fitbSkipBtn').onclick=()=>{ studySession.typed=''; studySession.showBack=true; renderStudy(); };
   }
+  document.getElementById('exitStudyBtn').onclick=()=>{
+    if(studySession.pos>0){ showConfirm('Exit this session?','Your completed reviews are already saved. The remaining cards will stay due.',()=>{studySession=null;renderStudy();}); } else { studySession=null; renderStudy(); }
+  };
   const gr=document.getElementById('gradeRow');
   if(gr) gr.querySelectorAll('button').forEach(b=>b.onclick=()=>advanceCard(card, parseInt(b.dataset.r,10)));
 }
@@ -321,31 +517,42 @@ function renderDecks(){
     document.getElementById('newDeckName').focus();
     document.getElementById('addDeckBtn').onclick=()=>{
       const v=document.getElementById('newDeckName').value.trim();
-      if(!v) return;
+      if(!v){ toast('Give your deck a name.'); return; }
       ensureDeck(v); deckView='list'; renderDecks();
     };
     document.getElementById('backToDecksBtn').onclick=()=>{ deckView='list'; renderDecks(); };
     return;
   }
 
+  const dueTotal=decks.reduce((n,d)=>n+dueCards(d).length,0);
+  const cardTotal=decks.reduce((n,d)=>n+d.cards.length,0);
+  const visibleDecks=decks.filter(d=>d.name.toLowerCase().includes(deckQuery.toLowerCase().trim()));
   el.innerHTML=`<div class="card">
     <div class="panel-header-row">${panelHeader('layers','Your Decks','Create, manage, and study your decks.')}
       <button class="btn" id="newDeckBtn">${ICONS.plus} Create Deck</button></div>
+    ${decks.length?`<div class="dashboard-grid"><div class="stat-card"><div class="stat-value">${decks.length}</div><div class="stat-label">Decks</div></div><div class="stat-card"><div class="stat-value">${cardTotal}</div><div class="stat-label">Total cards</div></div><div class="stat-card"><div class="stat-value">${dueTotal}</div><div class="stat-label">Due now</div></div></div>`:''}
     ${!decks.length?`<div class="empty-state"><div class="empty-illustration"><span class="ei-card">${ICONS.card}</span><span class="ei-spark a">${ICONS.sparkle}</span><span class="ei-spark b">${ICONS.sparkle}</span></div>
-      <h3>No decks yet</h3><p>Create your first deck to start studying, or let AI generate one for you.</p></div>` : ''}
+      <h3>No decks yet</h3><p>Create your first deck to start studying, or let AI generate one for you.</p><div class="empty-actions"><button class="btn" id="newDeckEmpty">${ICONS.plus} Create deck</button><button class="btn secondary" id="aiDeckEmpty">${ICONS.sparkle} Generate with AI</button></div></div>` : `<div class="deck-filter"><input id="deckSearch" placeholder="Search decks…" value="${escapeHtml(deckQuery)}" aria-label="Search decks"><span class="sub">${visibleDecks.length} shown</span></div>`}
     </div>
     <div id="deckListWrap"></div>`;
-  document.getElementById('newDeckBtn').onclick=()=>{ deckView='create'; renderDecks(); };
+  const newDeckBtn=document.getElementById('newDeckBtn');
+  if(newDeckBtn) newDeckBtn.onclick=()=>{ deckView='create'; renderDecks(); };
+  const emptyNew=document.getElementById('newDeckEmpty'); if(emptyNew) emptyNew.onclick=()=>{deckView='create';renderDecks();};
+  const emptyAI=document.getElementById('aiDeckEmpty'); if(emptyAI) emptyAI.onclick=()=>switchTab('ai');
+  const search=document.getElementById('deckSearch');
+  if(search){ search.oninput=()=>{deckQuery=search.value; renderDecks(); const s2=document.getElementById('deckSearch'); if(s2){s2.focus();s2.setSelectionRange(deckQuery.length,deckQuery.length);} }; }
   const wrap=document.getElementById('deckListWrap');
   if(!decks.length) return;
-  wrap.innerHTML=decks.map(d=>`<div class="card"><div class="deck-row">
+  if(!visibleDecks.length){ wrap.innerHTML=`<div class="card empty-state"><h3>No matching decks</h3><p>Try a different search term.</p></div>`; return; }
+  wrap.innerHTML=visibleDecks.map(d=>`<div class="card"><div class="deck-row">
     <span class="deck-row-icon">${ICONS.layers}</span>
     <div style="flex:1;min-width:0;"><strong>${escapeHtml(d.name)}</strong><div class="sub">${d.cards.length} cards · ${dueCards(d).length} due</div></div>
-    <div class="row" style="gap:6px;justify-content:flex-end;width:auto;flex:none;">
+    <div class="deck-actions">
+    <button class="btn" data-act="study" data-id="${d.id}">${ICONS.card} Study</button>
     <button class="btn secondary" data-act="export" data-id="${d.id}" title="Simple front,back CSV — a general-purpose backup format">${ICONS.download} CSV</button>
     <button class="btn secondary" data-act="exportgimkit" data-id="${d.id}" title="Question, Answer 1-4, Correct Answer — the layout Gimkit/Kahoot/Quizizz-style spreadsheet imports expect">${ICONS.download} Gimkit</button>
     <button class="btn secondary" data-act="exportquizlet" data-id="${d.id}" title="Tab-separated term/definition — paste straight into Quizlet's import screen">${ICONS.download} Quizlet</button>
-    <button class="btn secondary" data-act="print" data-id="${d.id}" title="Print flashcards">${ICONS.print}</button>
+    <button class="btn secondary" data-act="print" data-id="${d.id}" title="Print flashcards" aria-label="Print flashcards">${ICONS.print}</button>
     <button class="btn danger" data-act="del" data-id="${d.id}">${ICONS.trash}</button></div></div>
     <details><summary class="sub" style="cursor:pointer;">Add / view cards (${d.cards.length})</summary>
     <div style="margin-top:10px;">
@@ -372,8 +579,8 @@ function renderDecks(){
       </div>
       <div style="margin-top:14px;">${d.cards.map(c=> c.id===editingCardId ? cardEditForm(d,c) : `<div class="deck-list-item">
         <div style="flex:1;min-width:0;">${cardSummary(c)}</div>
-        <div class="row" style="gap:6px;justify-content:flex-end;width:auto;flex:none;"><button class="btn secondary" data-act="editcard" data-id="${d.id}" data-cid="${c.id}">${ICONS.pencil}</button>
-        <button class="btn danger" data-act="delcard" data-id="${d.id}" data-cid="${c.id}">${ICONS.trash}</button></div></div>`).join('')}</div>
+        <div class="row" style="gap:6px;justify-content:flex-end;width:auto;flex:none;"><button class="btn secondary" data-act="editcard" data-id="${d.id}" data-cid="${c.id}" title="Edit card" aria-label="Edit card">${ICONS.pencil}</button>
+        <button class="btn danger" data-act="delcard" data-id="${d.id}" data-cid="${c.id}" title="Delete card" aria-label="Delete card">${ICONS.trash}</button></div></div>`).join('')}</div>
     </div></details></div>`).join('');
 
   wrap.querySelectorAll('.typeBtn').forEach(b=>b.onclick=()=>{
@@ -383,30 +590,31 @@ function renderDecks(){
     wrap.querySelector(`.addMcq[data-deck="${deckId}"]`).classList.toggle('hidden', type!=='mcq');
     wrap.querySelector(`.addFitb[data-deck="${deckId}"]`).classList.toggle('hidden', type!=='fitb');
   });
-  wrap.querySelectorAll('[data-act="del"]').forEach(b=>b.onclick=()=>{ if(confirm('Delete this deck?')){ delete state.decks[b.dataset.id]; saveDecks(); renderDecks(); } });
+  wrap.querySelectorAll('[data-act="study"]').forEach(b=>b.onclick=()=>startStudy(b.dataset.id,false));
+  wrap.querySelectorAll('[data-act="del"]').forEach(b=>b.onclick=()=>{ showConfirm('Delete this deck?','This removes the deck and all of its cards from this browser.',()=>{ delete state.decks[b.dataset.id]; saveDecks(); toast('Deck deleted.'); renderDecks(); }); });
   wrap.querySelectorAll('[data-act="addcard"]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.id, f=wrap.querySelector(`.cf[data-id="${id}"]`), bk=wrap.querySelector(`.cb[data-id="${id}"]`);
     if(!f.value.trim()||!bk.value.trim()) return;
     state.decks[id].cards.push({id:uid(),type:'basic',front:f.value.trim(),back:bk.value.trim(),interval:0,ease:2.5,due:0,reps:0});
-    saveDecks(); renderDecks();
+    saveDecks(); toast('Card added.'); renderDecks();
   });
   wrap.querySelectorAll('[data-act="addmcq"]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.id;
     const q=wrap.querySelector(`.mq[data-id="${id}"]`).value.trim();
     const opts=Array.from(wrap.querySelectorAll(`.mo[data-id="${id}"]`)).map(i=>i.value.trim());
     const correctRadio=wrap.querySelector(`.mcr[data-id="${id}"]:checked`);
-    if(!q || opts.some(o=>!o) || !correctRadio){ alert('Fill in the question and all 4 options, and mark the correct one.'); return; }
+    if(!q || opts.some(o=>!o) || !correctRadio){ toast('Fill in the question, all 4 options, and choose the correct answer.'); return; }
     const correctIndex=parseInt(correctRadio.value,10);
     state.decks[id].cards.push({id:uid(),type:'mcq',front:q,options:opts,correctIndex,back:opts[correctIndex],interval:0,ease:2.5,due:0,reps:0});
-    saveDecks(); renderDecks();
+    saveDecks(); toast('Card added.'); renderDecks();
   });
   wrap.querySelectorAll('[data-act="addfitb"]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.id;
     const q=wrap.querySelector(`.fq[data-id="${id}"]`).value.trim();
     const answers=wrap.querySelector(`.fa[data-id="${id}"]`).value.split(',').map(s=>s.trim()).filter(Boolean);
-    if(!q || !answers.length){ alert('Fill in the question and at least one accepted answer.'); return; }
+    if(!q || !answers.length){ toast('Fill in the question and at least one accepted answer.'); return; }
     state.decks[id].cards.push({id:uid(),type:'fitb',front:q,answers,back:answers[0],interval:0,ease:2.5,due:0,reps:0});
-    saveDecks(); renderDecks();
+    saveDecks(); toast('Card added.'); renderDecks();
   });
   wrap.querySelectorAll('[data-act="editcard"]').forEach(b=>b.onclick=()=>{ editingCardId=b.dataset.cid; renderDecks(); });
   wrap.querySelectorAll('[data-act="canceledit"]').forEach(b=>b.onclick=()=>{ editingCardId=null; renderDecks(); });
@@ -417,7 +625,7 @@ function renderDecks(){
     if(!front||!back) return;
     const c=state.decks[deckId].cards.find(x=>x.id===cid);
     c.front=front; c.back=back;
-    saveDecks(); editingCardId=null; renderDecks();
+    saveDecks(); editingCardId=null; toast('Card updated.'); renderDecks();
   });
   wrap.querySelectorAll('[data-act="savemcq"]').forEach(b=>b.onclick=()=>{
     const cid=b.dataset.id, deckId=b.dataset.deck;
@@ -428,7 +636,7 @@ function renderDecks(){
     const correctIndex=parseInt(correctRadio.value,10);
     const c=state.decks[deckId].cards.find(x=>x.id===cid);
     c.front=front; c.options=opts; c.correctIndex=correctIndex; c.back=opts[correctIndex];
-    saveDecks(); editingCardId=null; renderDecks();
+    saveDecks(); editingCardId=null; toast('Card updated.'); renderDecks();
   });
   wrap.querySelectorAll('[data-act="savefitb"]').forEach(b=>b.onclick=()=>{
     const cid=b.dataset.id, deckId=b.dataset.deck;
@@ -437,12 +645,12 @@ function renderDecks(){
     if(!front || !answers.length) return;
     const c=state.decks[deckId].cards.find(x=>x.id===cid);
     c.front=front; c.answers=answers; c.back=answers[0];
-    saveDecks(); editingCardId=null; renderDecks();
+    saveDecks(); editingCardId=null; toast('Card updated.'); renderDecks();
   });
   wrap.querySelectorAll('[data-act="delcard"]').forEach(b=>b.onclick=()=>{
     const d=state.decks[b.dataset.id]; d.cards=d.cards.filter(c=>c.id!==b.dataset.cid);
     if(editingCardId===b.dataset.cid) editingCardId=null;
-    saveDecks(); renderDecks();
+    saveDecks(); toast('Card deleted.'); renderDecks();
   });
   wrap.querySelectorAll('[data-act="export"]').forEach(b=>b.onclick=()=>exportDeckCSV(b.dataset.id));
   wrap.querySelectorAll('[data-act="exportgimkit"]').forEach(b=>b.onclick=()=>exportDeckGimkit(b.dataset.id));
@@ -484,9 +692,9 @@ function exportDeckQuizlet(id){
 }
 function printDeck(id){
   const d=state.decks[id];
-  if(!d.cards.length){ alert('This deck has no cards yet.'); return; }
+  if(!d.cards.length){ toast('This deck has no cards yet.'); return; }
   const win=window.open('', '_blank');
-  if(!win){ alert('Your browser blocked the print window — please allow pop-ups for this site and try again.'); return; }
+  if(!win){ toast('Printing was blocked by your browser. Allow pop-ups for this site, then try again.'); return; }
   const cardsHtml=d.cards.map(c=>`<div class="print-card"><div class="pf">${escapeHtml(c.front)}</div><div class="pb">${escapeHtml(cardAnswerText(c))}</div></div>`).join('');
   win.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(d.name)} — Flashcards</title><meta charset="UTF-8">
 <style>
@@ -522,32 +730,33 @@ function renderImport(){
     <label>Import into</label><select id="impDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck</option></select>
     <input id="impNewName" class="hidden" placeholder="New deck name" style="margin-top:8px;">
     <label>Upload a file (.txt or .csv, one card per line)</label>
-    <div class="dropzone">${ICONS.file}<button type="button" class="dropzone-btn" id="impChooseBtn">Choose Files</button><span class="dropzone-label" id="impFileLabel">No file chosen</span></div>
+    <div class="dropzone" id="impDropzone">${ICONS.file}<button type="button" class="dropzone-btn" id="impChooseBtn">Choose Files</button><span class="dropzone-label" id="impFileLabel">No file chosen</span></div>
     <input type="file" id="impFileInput" multiple accept=".txt,.csv" class="hidden">
     <label>Card data</label><textarea id="impText" placeholder="Bonjour,Hello&#10;Merci,Thank you"></textarea>
-    <p class="sub">One card per line, as <code>front,back</code> or tab-separated.</p>
+    <p class="sub import-tip">One card per line: <code>front,back</code> or tab-separated. You can also drag files onto the box above.</p>
     <button class="btn" id="impBtn" style="margin-top:10px;">${ICONS.upload} Import cards</button><p class="sub" id="impResult"></p></div>`;
   const sel=document.getElementById('impDeckSel');
   sel.onchange=()=>document.getElementById('impNewName').classList.toggle('hidden', sel.value!=='__new');
   const impFileInput=document.getElementById('impFileInput');
   document.getElementById('impChooseBtn').onclick=()=>impFileInput.click();
-  impFileInput.onchange=async (e)=>{
-    const files=Array.from(e.target.files);
+  const handleImportFiles=async files=>{
     if(!files.length) return;
     document.getElementById('impFileLabel').textContent = files.length===1?files[0].name:files.length+' files chosen';
     const ta=document.getElementById('impText');
     for(const f of files){ const text=await readAsText(f); ta.value += (ta.value?'\n':'') + text.trim(); }
   };
+  impFileInput.onchange=e=>handleImportFiles(Array.from(e.target.files||[]));
+  bindDropzone('impDropzone','impFileInput',handleImportFiles);
   document.getElementById('impBtn').onclick=()=>{
     let deckId=sel.value;
-    if(deckId==='__new'){ const nm=document.getElementById('impNewName').value.trim(); if(!nm){alert('Name the new deck first.');return;} deckId=ensureDeck(nm); }
+    if(deckId==='__new'){ const nm=document.getElementById('impNewName').value.trim(); if(!nm){toast('Give the new deck a name first.');return;} deckId=ensureDeck(nm); }
     const lines=document.getElementById('impText').value.split('\n').map(l=>l.trim()).filter(Boolean);
     let added=0;
     lines.forEach(line=>{
       const parts=line.includes('\t')?line.split('\t'):splitCsvLine(line);
       if(parts.length>=2 && parts[0] && parts[1]){ state.decks[deckId].cards.push({id:uid(),front:parts[0].trim(),back:parts[1].trim(),interval:0,ease:2.5,due:0,reps:0}); added++; }
     });
-    saveDecks(); document.getElementById('impResult').textContent=`Imported ${added} card(s).`; document.getElementById('impText').value=''; document.getElementById('impFileLabel').textContent='No file chosen'; renderDecks();
+    saveDecks(); document.getElementById('impResult').textContent=`Imported ${added} card(s).`; document.getElementById('impText').value=''; document.getElementById('impFileLabel').textContent='No file chosen'; toast(added?`Imported ${added} card(s).`:'No valid cards were found.'); renderDecks();
   };
 }
 function splitCsvLine(line){
@@ -577,7 +786,7 @@ function renderAI(){
   const el=document.getElementById('tab-ai'), decks=Object.values(state.decks);
   el.innerHTML=`<div class="card">${panelHeader('sparkle','Create with AI','Let AI turn your notes, files, or ideas into a complete deck.')}
     <label>Attach files (text, .md, .csv, PDF, or images)</label>
-    <div class="dropzone">${ICONS.file}<button type="button" class="dropzone-btn" id="aiChooseBtn">Choose Files</button><span class="dropzone-label" id="aiFileLabel">No file chosen</span></div>
+    <div class="dropzone" id="aiDropzone">${ICONS.file}<button type="button" class="dropzone-btn" id="aiChooseBtn">Choose Files</button><span class="dropzone-label" id="aiFileLabel">No file chosen</span></div>
     <input type="file" id="aiFileInput" multiple accept=".txt,.md,.csv,.pdf,image/*" class="hidden">
     <div class="filelist" id="aiFileList"></div>
     <label>Extra notes (optional)</label>
@@ -589,7 +798,7 @@ function renderAI(){
       <button type="button" class="typeBtn" data-type="fitb">${ICONS.pencil}<span>Fill in the blank</span></button>
     </div>
     <input type="hidden" id="aiCardType" value="basic">
-    <p class="sub">The AI decides how many cards to make based on the material, and checks your existing decks to avoid duplicating cards you already have.</p>
+    <p class="sub import-tip">The AI decides how many cards to make from your material and skips cards that duplicate existing fronts. Review the generated cards before saving.</p>
     <label>Save into</label>
     <select id="aiDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck</option></select>
     <input id="aiNewName" class="hidden" placeholder="New deck name" style="margin-top:8px;">
@@ -599,11 +808,8 @@ function renderAI(){
   sel.onchange=()=>document.getElementById('aiNewName').classList.toggle('hidden', sel.value!=='__new');
   const aiFileInput=document.getElementById('aiFileInput');
   document.getElementById('aiChooseBtn').onclick=()=>aiFileInput.click();
-  aiFileInput.onchange=(e)=>{
-    aiFiles=Array.from(e.target.files);
-    document.getElementById('aiFileLabel').textContent = aiFiles.length ? (aiFiles.length===1?aiFiles[0].name:aiFiles.length+' files chosen') : 'No file chosen';
-    document.getElementById('aiFileList').innerHTML=aiFiles.map(f=>`<span>${escapeHtml(f.name)}</span>`).join('');
-  };
+  aiFileInput.onchange=e=>updateAIFileList(Array.from(e.target.files||[]));
+  bindDropzone('aiDropzone','aiFileInput',updateAIFileList);
   el.querySelectorAll('.typeBtn').forEach(b=>b.onclick=()=>{
     el.querySelectorAll('.typeBtn').forEach(x=>x.classList.toggle('active', x===b));
     document.getElementById('aiCardType').value=b.dataset.type;
@@ -622,7 +828,7 @@ function renderAI(){
         else if(f.type==='application/pdf' || f.name.endsWith('.pdf')) combinedText += '\n\n'+await extractPdfText(f);
         else combinedText += '\n\n'+await readAsText(f);
       }
-      if(!combinedText.trim() && !images.length){ alert('Attach a file or add some notes first.'); btn.disabled=false; document.getElementById('aiStatus').textContent=''; return; }
+      if(!combinedText.trim() && !images.length){ toast('Add notes or attach at least one file first.'); btn.disabled=false; document.getElementById('aiStatus').textContent=''; return; }
 
       // existing-deck context to avoid duplicates
       const existingSummary = Object.values(state.decks).map(d=>
@@ -710,7 +916,7 @@ Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing e
 
       document.getElementById('aiSaveBtn').onclick=()=>{
         let deckId=sel.value;
-        if(deckId==='__new'){ const nm=document.getElementById('aiNewName').value.trim(); if(!nm){alert('Name the new deck first.');return;} deckId=ensureDeck(nm); }
+        if(deckId==='__new'){ const nm=document.getElementById('aiNewName').value.trim(); if(!nm){toast('Give the new deck a name first.');return;} deckId=ensureDeck(nm); }
         const existingFronts = new Set(state.decks[deckId].cards.map(c=>c.front.toLowerCase().trim()));
         let saved=0;
         cards.forEach(c=>{
@@ -727,6 +933,7 @@ Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing e
         });
         saveDecks();
         document.getElementById('aiStatus').textContent = `Saved ${saved} card(s)${saved<cards.length?' ('+(cards.length-saved)+' skipped as duplicates)':''}.`;
+        toast(`Saved ${saved} card(s)${saved<cards.length?' · duplicates skipped':''}.`);
         preview.innerHTML=''; renderDecks();
       };
     }catch(e){
@@ -736,14 +943,47 @@ Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing e
   };
 }
 
+function bindDropzone(zoneId, inputId, onFiles){
+  const zone=document.getElementById(zoneId), input=document.getElementById(inputId);
+  if(!zone||!input) return;
+  ['dragenter','dragover'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('is-dragover');}));
+  ['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('is-dragover');}));
+  zone.addEventListener('drop',e=>{ const files=Array.from(e.dataTransfer.files||[]); if(files.length) onFiles(files); });
+}
+function updateAIFileList(files){
+  aiFiles=files;
+  const label=document.getElementById('aiFileLabel'); const list=document.getElementById('aiFileList');
+  if(label) label.textContent=files.length?(files.length===1?files[0].name:files.length+' files chosen'):'No file chosen';
+  if(list) list.innerHTML=files.map(f=>`<span>${escapeHtml(f.name)}</span>`).join('');
+}
+function setupGlobalUX(){
+  initTheme();
+  document.getElementById('themeToggle').onclick=toggleTheme;
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape' && studySession && !document.getElementById('modalRoot').innerHTML){
+      e.preventDefault();
+      if(studySession.pos>0) showConfirm('Exit this session?','Your completed reviews are already saved. The remaining cards will stay due.',()=>{studySession=null;renderStudy();});
+      else {studySession=null;renderStudy();}
+      return;
+    }
+    if(!studySession || ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) return;
+    const k=e.key;
+    if(k===' '){ e.preventDefault(); if(!studySession.showBack){studySession.showBack=true;renderStudy();} return; }
+    if(['1','2','3','4'].includes(k) && studySession.showBack){ e.preventDefault(); const btn=document.querySelector(`#gradeRow button[data-r="${Number(k)-1}"]`); if(btn) btn.click(); }
+  });
+}
 const renderers={study:renderStudy, decks:renderDecks, import:renderImport, ai:renderAI};
 document.getElementById('tabs').addEventListener('click', e=>{
   const b=e.target.closest('button[data-tab]'); if(!b) return;
   document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
   Object.keys(renderers).forEach(k=>document.getElementById('tab-'+k).classList.toggle('hidden', k!==b.dataset.tab));
+  localStorage.setItem('recall_tab', b.dataset.tab);
   renderers[b.dataset.tab]();
 });
-renderStudy(); renderDecks(); renderImport(); renderAI();
+setupGlobalUX();
+const initialTab=localStorage.getItem('recall_tab') || 'study';
+const initialBtn=document.querySelector(`#tabs button[data-tab="${initialTab}"]`) || document.querySelector('#tabs button[data-tab="study"]');
+initialBtn.click();
 </script>
 </body>
 </html>
