@@ -9,21 +9,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/[email protected]/build/pdf.min.js"></script>
 <style>
-:root{--bg:#eeede9;--panel:#fff;--text:#1a1917;--sub:#69675f;--border:#dedcd4;--accent:#81b64c;--accent-dark:#6a9c3f;--ink:#fff;--danger:#c2392f;--hard:#d9a23b;--easy:#4c8bf5;--header-bg:#262421;--header-ink:#e9e8e4;--header-sub:#9c9a94;}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--panel:#211f1c;--text:#eae9e5;--sub:#a3a099;--border:#33312c;--header-bg:#1a1917;}}
-:root[data-theme="dark"]{--bg:#171614;--panel:#211f1c;--text:#eae9e5;--sub:#a3a099;--border:#33312c;--header-bg:#1a1917;}
+:root{--bg:#eeede9;--panel:#fff;--text:#1a1917;--sub:#69675f;--border:#dedcd4;--accent:#81b64c;--accent-dark:#6a9c3f;--accent-soft:rgba(129,182,76,.15);--ink:#fff;--danger:#c2392f;--hard:#d9a23b;--easy:#4c8bf5;--header-bg:#262421;--header-ink:#e9e8e4;--header-sub:#9c9a94;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--panel:#211f1c;--text:#eae9e5;--sub:#a3a099;--border:#33312c;--header-bg:#1a1917;--accent-soft:rgba(129,182,76,.18);}}
+:root[data-theme="dark"]{--bg:#171614;--panel:#211f1c;--text:#eae9e5;--sub:#a3a099;--border:#33312c;--header-bg:#1a1917;--accent-soft:rgba(129,182,76,.18);}
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-header{position:sticky;top:0;padding:14px 16px;background:var(--header-bg);border-bottom:3px solid var(--accent);z-index:5;}
-h1{margin:0 0 10px;font-size:20px;font-weight:800;letter-spacing:.2px;color:var(--header-ink);}
+header{position:sticky;top:0;padding:12px 16px;background:var(--header-bg);border-bottom:3px solid var(--accent);z-index:5;}
+.brand{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
+.logo-badge{flex:none;width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;}
+.logo-badge svg{width:16px;height:16px;}
+h1{margin:0;font-size:19px;font-weight:800;letter-spacing:.2px;color:var(--header-ink);}
 nav{display:flex;gap:4px;overflow-x:auto;}
-nav button{border:none;background:transparent;color:var(--header-sub);padding:8px 14px;border-radius:3px;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;}
+nav button{display:inline-flex;align-items:center;gap:6px;border:none;background:transparent;color:var(--header-sub);padding:8px 14px;border-radius:3px;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;font-family:inherit;}
+nav button svg{width:15px;height:15px;flex:none;}
 nav button:hover{background:rgba(255,255,255,.08);color:var(--header-ink);}
 nav button.active{background:var(--accent);color:#fff;}
 main{padding:16px;max-width:720px;margin:0 auto;padding-bottom:60px;}
 .card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.06);}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px;}
-button.btn{background:var(--accent);color:var(--ink);border:none;border-bottom:3px solid var(--accent-dark);padding:10px 16px;border-radius:3px;font-size:14px;font-weight:700;cursor:pointer;}
+button.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--ink);border:none;border-bottom:3px solid var(--accent-dark);padding:10px 16px;border-radius:3px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+button.btn svg{width:15px;height:15px;flex:none;}
 button.btn:hover{background:var(--accent-dark);}
 button.btn.secondary{background:transparent;color:var(--accent-dark);border:1px solid var(--border);border-bottom:1px solid var(--border);}
 button.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--danger);border-bottom:1px solid var(--danger);}
@@ -69,16 +74,46 @@ details summary{font-weight:700;color:var(--accent-dark);}
 .fitb-feedback.correct{color:var(--accent-dark);}
 .fitb-feedback.wrong{color:var(--danger);}
 .fitb-answers{font-weight:400;color:var(--sub);font-size:13px;margin-top:2px;}
+.panel-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.panel-header{display:flex;align-items:flex-start;gap:13px;}
+.panel-icon{flex:none;width:42px;height:42px;border-radius:10px;background:var(--accent-soft);color:var(--accent-dark);display:flex;align-items:center;justify-content:center;}
+.panel-icon svg{width:21px;height:21px;}
+.panel-title{font-size:17px;font-weight:800;margin:0 0 2px;}
+.panel-sub{font-size:13px;color:var(--sub);margin:0;max-width:46ch;}
+.back-link{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--sub);font-size:13px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit;}
+.back-link:hover{color:var(--accent-dark);}
+.back-link svg{width:14px;height:14px;}
+.empty-state{display:flex;flex-direction:column;align-items:center;text-align:center;padding:36px 16px 20px;}
+.empty-illustration{position:relative;width:110px;height:110px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
+.empty-illustration .ei-card{color:var(--accent);width:44px;height:44px;}
+.empty-illustration .ei-spark{position:absolute;color:var(--accent);width:16px;height:16px;}
+.empty-illustration .ei-spark.a{top:6px;right:10px;}
+.empty-illustration .ei-spark.b{bottom:14px;left:2px;width:11px;height:11px;}
+.empty-state h3{margin:0 0 6px;font-size:17px;font-weight:800;}
+.empty-state p{margin:0;color:var(--sub);font-size:13px;max-width:34ch;}
+.dropzone{border:1.5px dashed var(--border);border-radius:6px;padding:16px;display:flex;align-items:center;gap:12px;background:var(--bg);}
+.dropzone svg{flex:none;width:20px;height:20px;color:var(--sub);}
+.dropzone-btn{flex:none;background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:700;padding:7px 12px;border-radius:3px;cursor:pointer;font-family:inherit;}
+.dropzone-label{font-size:13px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.type-toggle button{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;padding:10px 8px;}
+.type-toggle button svg{width:16px;height:16px;flex:none;}
+.deck-row{display:flex;align-items:center;gap:12px;padding:12px 4px;}
+.deck-row+.deck-row{border-top:1px solid var(--border);}
+.deck-row-icon{flex:none;width:36px;height:36px;border-radius:8px;background:var(--accent-soft);color:var(--accent-dark);display:flex;align-items:center;justify-content:center;}
+.deck-row-icon svg{width:18px;height:18px;}
 </style>
 </head>
 <body>
 <header>
-  <h1>Recall</h1>
+  <div class="brand">
+    <span class="logo-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>
+    <h1>Recall</h1>
+  </div>
   <nav id="tabs">
-    <button data-tab="study" class="active">Study</button>
-    <button data-tab="decks">Decks</button>
-    <button data-tab="import">Import</button>
-    <button data-tab="ai">AI Create</button>
+    <button data-tab="study" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2Z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7Z"/></svg>Study</button>
+    <button data-tab="decks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Decks</button>
+    <button data-tab="import"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.6 4.4 0 0 1-1.3-8.9A5 5 0 0 1 15.9 7a4.5 4.5 0 0 1 2.1 8.6"/><polyline points="9 15 12 12 15 15"/><line x1="12" y1="12" x2="12" y2="21"/></svg>Import</button>
+    <button data-tab="ai"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c.4 3.2 1.1 5.6 2.2 7.1 1.1 1.5 2.7 2.5 4.8 3.2-2.1.7-3.7 1.7-4.8 3.2-1.1 1.5-1.8 3.9-2.2 7.1-.4-3.2-1.1-5.6-2.2-7.1-1.1-1.5-2.7-2.5-4.8-3.2 2.1-.7 3.7-1.7 4.8-3.2 1.1-1.5 1.8-3.9 2.2-7.1Z"/></svg>AI Create</button>
   </nav>
 </header>
 <main>
@@ -99,6 +134,25 @@ function saveDecks(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 function uid(){ return Math.random().toString(36).slice(2,10); }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function ensureDeck(name){ const id=uid(); state.decks[id]={id,name,cards:[]}; saveDecks(); return id; }
+
+const ICONS={
+  layers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
+  card:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="7" y1="10" x2="17" y2="10"/><line x1="7" y1="14" x2="13" y2="14"/></svg>',
+  upload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.6 4.4 0 0 1-1.3-8.9A5 5 0 0 1 15.9 7a4.5 4.5 0 0 1 2.1 8.6"/><polyline points="9 15 12 12 15 15"/><line x1="12" y1="12" x2="12" y2="21"/></svg>',
+  sparkle:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c.4 3.2 1.1 5.6 2.2 7.1 1.1 1.5 2.7 2.5 4.8 3.2-2.1.7-3.7 1.7-4.8 3.2-1.1 1.5-1.8 3.9-2.2 7.1-.4-3.2-1.1-5.6-2.2-7.1-1.1-1.5-2.7-2.5-4.8-3.2 2.1-.7 3.7-1.7 4.8-3.2 1.1-1.5 1.8-3.9 2.2-7.1Z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  pencil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  file:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  download:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  print:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>'
+};
+function panelHeader(icon, title, sub){
+  return `<div class="panel-header"><span class="panel-icon">${ICONS[icon]}</span><div><p class="panel-title">${title}</p><p class="panel-sub">${sub}</p></div></div>`;
+}
 
 function schedule(card, rating){
   const MIN=60000,HR=60*MIN,DAY=24*HR;
@@ -121,10 +175,16 @@ function renderStudy(){
   const el=document.getElementById('tab-study');
   const decks=Object.values(state.decks);
   if(!studySession){
-    if(!decks.length){ el.innerHTML='<div class="card"><p class="sub">No decks yet. Create one in Decks, or generate cards with AI.</p></div>'; return; }
-    el.innerHTML=`<div class="card"><label>Pick a deck</label>
+    if(!decks.length){
+      el.innerHTML=`<div class="card">${panelHeader('card','Study','Pick a deck to start a spaced-repetition session.')}
+        <div class="empty-state"><div class="empty-illustration"><span class="ei-card">${ICONS.card}</span><span class="ei-spark a">${ICONS.sparkle}</span><span class="ei-spark b">${ICONS.sparkle}</span></div>
+        <h3>No decks yet</h3><p>Create your first deck to start studying, or let AI generate one for you.</p></div></div>`;
+      return;
+    }
+    el.innerHTML=`<div class="card">${panelHeader('card','Study','Pick a deck to start a spaced-repetition session.')}
+      <label>Pick a deck</label>
       <select id="studyDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${dueCards(d).length} due / ${d.cards.length})</option>`).join('')}</select>
-      <div class="row" style="margin-top:12px;"><button class="btn" id="startStudyBtn">Start studying</button>
+      <div class="row" style="margin-top:12px;"><button class="btn" id="startStudyBtn">${ICONS.card} Start studying</button>
       <label style="margin:0;"><input type="checkbox" id="allCardsChk" style="width:auto;"> include not-yet-due</label></div></div>`;
     document.getElementById('startStudyBtn').onclick=()=>{
       const deckId=document.getElementById('studyDeckSel').value, all=document.getElementById('allCardsChk').checked;
@@ -217,6 +277,7 @@ function renderStudyFITB(el, deck, card){
 
 // ---------- DECKS ----------
 let editingCardId=null;
+let deckView='list';
 function cardSummary(c){
   if(c.type==='mcq'){
     return `<div><strong>${escapeHtml(c.front)}</strong></div><div class="sub">MCQ · correct: ${escapeHtml(c.options[c.correctIndex]||'')}</div>`;
@@ -250,45 +311,69 @@ function cardEditForm(d, c){
 }
 function renderDecks(){
   const el=document.getElementById('tab-decks'), decks=Object.values(state.decks);
-  el.innerHTML=`<div class="card"><label>New deck name</label>
-    <div class="row"><input id="newDeckName" placeholder="e.g. Spanish Verbs"><button class="btn" id="addDeckBtn">Create</button></div></div>
+
+  if(deckView==='create'){
+    el.innerHTML=`<div class="card">${panelHeader('plus','Create New Deck','Give your deck a name and start adding cards.')}
+      <label>Deck name</label>
+      <div class="row"><input id="newDeckName" placeholder="e.g. Spanish Verbs"></div>
+      <button class="btn" id="addDeckBtn" style="margin-top:12px;">${ICONS.plus} Create</button></div>
+      <button type="button" class="back-link" id="backToDecksBtn">${ICONS.back} Back to decks</button>`;
+    document.getElementById('newDeckName').focus();
+    document.getElementById('addDeckBtn').onclick=()=>{
+      const v=document.getElementById('newDeckName').value.trim();
+      if(!v) return;
+      ensureDeck(v); deckView='list'; renderDecks();
+    };
+    document.getElementById('backToDecksBtn').onclick=()=>{ deckView='list'; renderDecks(); };
+    return;
+  }
+
+  el.innerHTML=`<div class="card">
+    <div class="panel-header-row">${panelHeader('layers','Your Decks','Create, manage, and study your decks.')}
+      <button class="btn" id="newDeckBtn">${ICONS.plus} Create Deck</button></div>
+    ${!decks.length?`<div class="empty-state"><div class="empty-illustration"><span class="ei-card">${ICONS.card}</span><span class="ei-spark a">${ICONS.sparkle}</span><span class="ei-spark b">${ICONS.sparkle}</span></div>
+      <h3>No decks yet</h3><p>Create your first deck to start studying, or let AI generate one for you.</p></div>` : ''}
+    </div>
     <div id="deckListWrap"></div>`;
-  document.getElementById('addDeckBtn').onclick=()=>{ const v=document.getElementById('newDeckName').value.trim(); if(v){ ensureDeck(v); renderDecks(); } };
+  document.getElementById('newDeckBtn').onclick=()=>{ deckView='create'; renderDecks(); };
   const wrap=document.getElementById('deckListWrap');
-  if(!decks.length){ wrap.innerHTML='<p class="sub">No decks yet.</p>'; return; }
-  wrap.innerHTML=decks.map(d=>`<div class="card"><div class="deck-list-item">
-    <div><strong>${escapeHtml(d.name)}</strong><div class="sub">${d.cards.length} cards · ${dueCards(d).length} due</div></div>
-    <div class="row" style="gap:6px;justify-content:flex-end;">
-    <button class="btn secondary" data-act="export" data-id="${d.id}" title="Simple front,back CSV — works with Quizlet/Anki-style imports">Export CSV</button>
-    <button class="btn secondary" data-act="exportmc" data-id="${d.id}" title="Question, Answer 1-4, Correct Answer — the layout Gimkit/Kahoot/Quizizz-style spreadsheet imports expect">Export MC CSV</button>
-    <button class="btn danger" data-act="del" data-id="${d.id}">Delete</button></div></div>
+  if(!decks.length) return;
+  wrap.innerHTML=decks.map(d=>`<div class="card"><div class="deck-row">
+    <span class="deck-row-icon">${ICONS.layers}</span>
+    <div style="flex:1;min-width:0;"><strong>${escapeHtml(d.name)}</strong><div class="sub">${d.cards.length} cards · ${dueCards(d).length} due</div></div>
+    <div class="row" style="gap:6px;justify-content:flex-end;width:auto;flex:none;">
+    <button class="btn secondary" data-act="export" data-id="${d.id}" title="Simple front,back CSV — a general-purpose backup format">${ICONS.download} CSV</button>
+    <button class="btn secondary" data-act="exportgimkit" data-id="${d.id}" title="Question, Answer 1-4, Correct Answer — the layout Gimkit/Kahoot/Quizizz-style spreadsheet imports expect">${ICONS.download} Gimkit</button>
+    <button class="btn secondary" data-act="exportquizlet" data-id="${d.id}" title="Tab-separated term/definition — paste straight into Quizlet's import screen">${ICONS.download} Quizlet</button>
+    <button class="btn secondary" data-act="print" data-id="${d.id}" title="Print flashcards">${ICONS.print}</button>
+    <button class="btn danger" data-act="del" data-id="${d.id}">${ICONS.trash}</button></div></div>
     <details><summary class="sub" style="cursor:pointer;">Add / view cards (${d.cards.length})</summary>
     <div style="margin-top:10px;">
       <div class="type-toggle">
-        <button type="button" class="typeBtn active" data-deck="${d.id}" data-type="basic">Basic</button>
-        <button type="button" class="typeBtn" data-deck="${d.id}" data-type="mcq">Multiple choice</button>
-        <button type="button" class="typeBtn" data-deck="${d.id}" data-type="fitb">Fill in the blank</button>
+        <button type="button" class="typeBtn active" data-deck="${d.id}" data-type="basic">${ICONS.list}<span>Basic</span></button>
+        <button type="button" class="typeBtn" data-deck="${d.id}" data-type="mcq">${ICONS.check}<span>Multiple choice</span></button>
+        <button type="button" class="typeBtn" data-deck="${d.id}" data-type="fitb">${ICONS.pencil}<span>Fill in the blank</span></button>
       </div>
       <div class="addBasic" data-deck="${d.id}">
         <label>Front</label><input class="cf" data-id="${d.id}" placeholder="Question">
         <label>Back</label><input class="cb" data-id="${d.id}" placeholder="Answer">
-        <button class="btn" style="margin-top:8px;" data-act="addcard" data-id="${d.id}">Add card</button>
+        <button class="btn" style="margin-top:8px;" data-act="addcard" data-id="${d.id}">${ICONS.plus} Add card</button>
       </div>
       <div class="addMcq hidden" data-deck="${d.id}">
         <label>Question</label><input class="mq" data-id="${d.id}" placeholder="Question">
         ${[0,1,2,3].map(i=>`<div class="opt-row"><input type="radio" name="mcorrect-${d.id}" class="mcr" data-id="${d.id}" value="${i}" ${i===0?'checked':''}>
           <input type="text" class="mo" data-id="${d.id}" data-idx="${i}" placeholder="Option ${i+1}"></div>`).join('')}
-        <button class="btn" style="margin-top:8px;" data-act="addmcq" data-id="${d.id}">Add card</button>
+        <button class="btn" style="margin-top:8px;" data-act="addmcq" data-id="${d.id}">${ICONS.plus} Add card</button>
       </div>
       <div class="addFitb hidden" data-deck="${d.id}">
         <label>Question (use ___ for the blank)</label><input class="fq" data-id="${d.id}" placeholder="The capital of France is ___.">
         <label>Accepted answers (comma-separated — list every acceptable variant)</label><input class="fa" data-id="${d.id}" placeholder="Paris, paris">
-        <button class="btn" style="margin-top:8px;" data-act="addfitb" data-id="${d.id}">Add card</button>
+        <button class="btn" style="margin-top:8px;" data-act="addfitb" data-id="${d.id}">${ICONS.plus} Add card</button>
       </div>
       <div style="margin-top:14px;">${d.cards.map(c=> c.id===editingCardId ? cardEditForm(d,c) : `<div class="deck-list-item">
         <div style="flex:1;min-width:0;">${cardSummary(c)}</div>
-        <div class="row" style="gap:6px;justify-content:flex-end;"><button class="btn secondary" data-act="editcard" data-id="${d.id}" data-cid="${c.id}">Edit</button>
-        <button class="btn danger" data-act="delcard" data-id="${d.id}" data-cid="${c.id}">✕</button></div></div>`).join('')}</div>
+        <div class="row" style="gap:6px;justify-content:flex-end;width:auto;flex:none;"><button class="btn secondary" data-act="editcard" data-id="${d.id}" data-cid="${c.id}">${ICONS.pencil}</button>
+        <button class="btn danger" data-act="delcard" data-id="${d.id}" data-cid="${c.id}">${ICONS.trash}</button></div></div>`).join('')}</div>
     </div></details></div>`).join('');
 
   wrap.querySelectorAll('.typeBtn').forEach(b=>b.onclick=()=>{
@@ -360,25 +445,26 @@ function renderDecks(){
     saveDecks(); renderDecks();
   });
   wrap.querySelectorAll('[data-act="export"]').forEach(b=>b.onclick=()=>exportDeckCSV(b.dataset.id));
-  wrap.querySelectorAll('[data-act="exportmc"]').forEach(b=>b.onclick=()=>exportDeckMC(b.dataset.id));
+  wrap.querySelectorAll('[data-act="exportgimkit"]').forEach(b=>b.onclick=()=>exportDeckGimkit(b.dataset.id));
+  wrap.querySelectorAll('[data-act="exportquizlet"]').forEach(b=>b.onclick=()=>exportDeckQuizlet(b.dataset.id));
+  wrap.querySelectorAll('[data-act="print"]').forEach(b=>b.onclick=()=>printDeck(b.dataset.id));
 }
 function csvQuote(v){ return '"' + String(v==null?'':v).replace(/"/g,'""') + '"'; }
-function downloadCSV(filename, content){
-  const blob=new Blob([content],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+function downloadFile(filename, content, mime){
+  const blob=new Blob([content],{type:mime||'text/csv'}); const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download=filename; a.click();
+}
+function cardAnswerText(c){
+  if(c.type==='mcq') return c.options[c.correctIndex]||'';
+  if(c.type==='fitb') return (c.answers||[]).join(' / ');
+  return c.back;
 }
 function exportDeckCSV(id){
   const d=state.decks[id];
-  const rows=d.cards.map(c=>{
-    let back;
-    if(c.type==='mcq') back=c.options[c.correctIndex]||'';
-    else if(c.type==='fitb') back=(c.answers||[]).join(' / ');
-    else back=c.back;
-    return [c.front, back].map(csvQuote).join(',');
-  });
-  downloadCSV(d.name+'.csv', rows.join('\n'));
+  const rows=d.cards.map(c=>[c.front, cardAnswerText(c)].map(csvQuote).join(','));
+  downloadFile(d.name+'.csv', rows.join('\n'));
 }
-function exportDeckMC(id){
+function exportDeckGimkit(id){
   const d=state.decks[id];
   const header=['Question','Answer 1','Answer 2','Answer 3','Answer 4','Correct Answer'].map(csvQuote).join(',');
   const rows=d.cards.map(c=>{
@@ -388,19 +474,70 @@ function exportDeckMC(id){
     else{ opts=[c.back,'','','']; correct=c.back; }
     return [c.front, ...opts, correct].map(csvQuote).join(',');
   });
-  downloadCSV(d.name+'-multiplechoice.csv', [header, ...rows].join('\n'));
+  downloadFile(d.name+'-gimkit.csv', [header, ...rows].join('\n'));
+}
+function exportDeckQuizlet(id){
+  const d=state.decks[id];
+  const clean=s=>String(s==null?'':s).replace(/[\t\r\n]+/g,' ').trim();
+  const rows=d.cards.map(c=>clean(c.front)+'\t'+clean(cardAnswerText(c)));
+  downloadFile(d.name+'-quizlet.txt', rows.join('\n'), 'text/plain');
+}
+function printDeck(id){
+  const d=state.decks[id];
+  if(!d.cards.length){ alert('This deck has no cards yet.'); return; }
+  const win=window.open('', '_blank');
+  if(!win){ alert('Your browser blocked the print window — please allow pop-ups for this site and try again.'); return; }
+  const cardsHtml=d.cards.map(c=>`<div class="print-card"><div class="pf">${escapeHtml(c.front)}</div><div class="pb">${escapeHtml(cardAnswerText(c))}</div></div>`).join('');
+  win.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(d.name)} — Flashcards</title><meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:28px;color:#1a1917;}
+h1{font-size:19px;margin:0 0 4px;}
+.meta{color:#69675f;font-size:12px;margin-bottom:20px;}
+.print-toolbar{margin-bottom:18px;}
+.print-toolbar button{background:#81b64c;color:#fff;border:none;border-radius:4px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+.print-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.print-card{border:1px solid #ccc;border-radius:6px;padding:14px 16px;break-inside:avoid;}
+.pf{font-weight:700;font-size:14px;margin-bottom:10px;}
+.pb{font-size:12px;color:#555;border-top:1px dashed #bbb;padding-top:8px;}
+.pb::before{content:'Answer: ';font-weight:700;color:#333;}
+@media print{
+  .print-toolbar{display:none;}
+  body{margin:0.35in;}
+  .print-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style></head><body>
+<div class="print-toolbar"><button onclick="window.print()">Print</button></div>
+<h1>${escapeHtml(d.name)}</h1><div class="meta">${d.cards.length} card(s)</div>
+<div class="print-grid">${cardsHtml}</div>
+</body></html>`);
+  win.document.close();
+  setTimeout(()=>{ try{ win.focus(); win.print(); }catch(e){} }, 350);
 }
 
 // ---------- IMPORT ----------
 function renderImport(){
   const el=document.getElementById('tab-import'), decks=Object.values(state.decks);
-  el.innerHTML=`<div class="card"><p class="sub">Paste cards — one per line, as <code>front,back</code> or tab-separated. Works with Anki/Quizlet exports.</p>
+  el.innerHTML=`<div class="card">${panelHeader('upload','Import Cards','Paste cards, upload files, or import from Anki/Quizlet.')}
     <label>Import into</label><select id="impDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck</option></select>
     <input id="impNewName" class="hidden" placeholder="New deck name" style="margin-top:8px;">
+    <label>Upload a file (.txt or .csv, one card per line)</label>
+    <div class="dropzone">${ICONS.file}<button type="button" class="dropzone-btn" id="impChooseBtn">Choose Files</button><span class="dropzone-label" id="impFileLabel">No file chosen</span></div>
+    <input type="file" id="impFileInput" multiple accept=".txt,.csv" class="hidden">
     <label>Card data</label><textarea id="impText" placeholder="Bonjour,Hello&#10;Merci,Thank you"></textarea>
-    <button class="btn" id="impBtn" style="margin-top:10px;">Import cards</button><p class="sub" id="impResult"></p></div>`;
+    <p class="sub">One card per line, as <code>front,back</code> or tab-separated.</p>
+    <button class="btn" id="impBtn" style="margin-top:10px;">${ICONS.upload} Import cards</button><p class="sub" id="impResult"></p></div>`;
   const sel=document.getElementById('impDeckSel');
   sel.onchange=()=>document.getElementById('impNewName').classList.toggle('hidden', sel.value!=='__new');
+  const impFileInput=document.getElementById('impFileInput');
+  document.getElementById('impChooseBtn').onclick=()=>impFileInput.click();
+  impFileInput.onchange=async (e)=>{
+    const files=Array.from(e.target.files);
+    if(!files.length) return;
+    document.getElementById('impFileLabel').textContent = files.length===1?files[0].name:files.length+' files chosen';
+    const ta=document.getElementById('impText');
+    for(const f of files){ const text=await readAsText(f); ta.value += (ta.value?'\n':'') + text.trim(); }
+  };
   document.getElementById('impBtn').onclick=()=>{
     let deckId=sel.value;
     if(deckId==='__new'){ const nm=document.getElementById('impNewName').value.trim(); if(!nm){alert('Name the new deck first.');return;} deckId=ensureDeck(nm); }
@@ -410,7 +547,7 @@ function renderImport(){
       const parts=line.includes('\t')?line.split('\t'):splitCsvLine(line);
       if(parts.length>=2 && parts[0] && parts[1]){ state.decks[deckId].cards.push({id:uid(),front:parts[0].trim(),back:parts[1].trim(),interval:0,ease:2.5,due:0,reps:0}); added++; }
     });
-    saveDecks(); document.getElementById('impResult').textContent=`Imported ${added} card(s).`; document.getElementById('impText').value=''; renderDecks();
+    saveDecks(); document.getElementById('impResult').textContent=`Imported ${added} card(s).`; document.getElementById('impText').value=''; document.getElementById('impFileLabel').textContent='No file chosen'; renderDecks();
   };
 }
 function splitCsvLine(line){
@@ -438,28 +575,35 @@ function readAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileRe
 
 function renderAI(){
   const el=document.getElementById('tab-ai'), decks=Object.values(state.decks);
-  el.innerHTML=`<div class="card">
+  el.innerHTML=`<div class="card">${panelHeader('sparkle','Create with AI','Let AI turn your notes, files, or ideas into a complete deck.')}
     <label>Attach files (text, .md, .csv, PDF, or images)</label>
-    <input type="file" id="aiFileInput" multiple accept=".txt,.md,.csv,.pdf,image/*">
+    <div class="dropzone">${ICONS.file}<button type="button" class="dropzone-btn" id="aiChooseBtn">Choose Files</button><span class="dropzone-label" id="aiFileLabel">No file chosen</span></div>
+    <input type="file" id="aiFileInput" multiple accept=".txt,.md,.csv,.pdf,image/*" class="hidden">
     <div class="filelist" id="aiFileList"></div>
     <label>Extra notes (optional)</label>
     <textarea id="aiInput" placeholder="Any extra context or a topic to focus on"></textarea>
     <label>Card type</label>
     <div class="type-toggle">
-      <button type="button" class="typeBtn active" data-type="basic">Basic</button>
-      <button type="button" class="typeBtn" data-type="mcq">Multiple choice</button>
-      <button type="button" class="typeBtn" data-type="fitb">Fill in the blank</button>
+      <button type="button" class="typeBtn active" data-type="basic">${ICONS.list}<span>Basic</span></button>
+      <button type="button" class="typeBtn" data-type="mcq">${ICONS.check}<span>Multiple choice</span></button>
+      <button type="button" class="typeBtn" data-type="fitb">${ICONS.pencil}<span>Fill in the blank</span></button>
     </div>
     <input type="hidden" id="aiCardType" value="basic">
     <p class="sub">The AI decides how many cards to make based on the material, and checks your existing decks to avoid duplicating cards you already have.</p>
     <label>Save into</label>
     <select id="aiDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck</option></select>
     <input id="aiNewName" class="hidden" placeholder="New deck name" style="margin-top:8px;">
-    <button class="btn" id="aiBtn" style="margin-top:10px;">Generate cards</button>
+    <button class="btn" id="aiBtn" style="margin-top:10px;">${ICONS.sparkle} Generate cards</button>
     <p class="sub" id="aiStatus"></p><div id="aiPreview"></div></div>`;
   const sel=document.getElementById('aiDeckSel');
   sel.onchange=()=>document.getElementById('aiNewName').classList.toggle('hidden', sel.value!=='__new');
-  document.getElementById('aiFileInput').onchange=(e)=>{ aiFiles=Array.from(e.target.files); document.getElementById('aiFileList').innerHTML=aiFiles.map(f=>`<span>${escapeHtml(f.name)}</span>`).join(''); };
+  const aiFileInput=document.getElementById('aiFileInput');
+  document.getElementById('aiChooseBtn').onclick=()=>aiFileInput.click();
+  aiFileInput.onchange=(e)=>{
+    aiFiles=Array.from(e.target.files);
+    document.getElementById('aiFileLabel').textContent = aiFiles.length ? (aiFiles.length===1?aiFiles[0].name:aiFiles.length+' files chosen') : 'No file chosen';
+    document.getElementById('aiFileList').innerHTML=aiFiles.map(f=>`<span>${escapeHtml(f.name)}</span>`).join('');
+  };
   el.querySelectorAll('.typeBtn').forEach(b=>b.onclick=()=>{
     el.querySelectorAll('.typeBtn').forEach(x=>x.classList.toggle('active', x===b));
     document.getElementById('aiCardType').value=b.dataset.type;
