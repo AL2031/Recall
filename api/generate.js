@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const { model, messages, temperature } = req.body || {};
+  const { model, messages, temperature, response_format } = req.body || {};
   if (!model || !messages) {
     res.status(400).json({ error: 'Missing model or messages in request body' });
     return;
@@ -79,7 +79,12 @@ module.exports = async (req, res) => {
           'Content-Type': 'application/json',
           Authorization: 'Bearer ' + apiKey
         },
-        body: JSON.stringify({ model, messages, temperature: temperature ?? 0.4 })
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: temperature ?? 0.4,
+          ...(response_format ? { response_format } : {})
+        })
       });
 
       // Rate-limited or unauthorized on this key -> try the next one instead
