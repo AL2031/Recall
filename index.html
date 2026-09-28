@@ -174,6 +174,8 @@ label{margin-top:14px;}
 .modal h3{margin:0 0 6px;font-size:18px;}
 .modal p{margin:0;color:var(--sub);font-size:13px;}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+.modal input{margin-top:14px;}
+.modal .modal-error{color:var(--danger);font-size:12px;margin:6px 0 0;min-height:16px;}
 .modal #modalConfirm{background:var(--danger);color:#fff;border-color:var(--danger);border-bottom-color:#8f2a22;}
 .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border:1px solid var(--border);border-bottom-width:2px;border-radius:6px;background:var(--panel);font-size:11px;font-weight:800;color:var(--sub);}
 .study-shortcuts{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;color:var(--sub);font-size:11px;margin-top:12px;}
@@ -297,6 +299,30 @@ function showConfirm(title, message, onConfirm){
   root.querySelector('.modal-backdrop').onclick=e=>{ if(e.target===e.currentTarget) close(); };
   document.addEventListener('keydown', function esc(ev){ if(ev.key==='Escape'){ close(); document.removeEventListener('keydown',esc); } });
   document.getElementById('modalConfirm').focus();
+}
+function showPrompt(title, message, placeholder, okLabel, onSubmit){
+  const root=document.getElementById('modalRoot');
+  root.innerHTML=`<div class="modal-backdrop" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">${escapeHtml(title)}</h3><p>${escapeHtml(message)}</p>
+    <input id="modalPromptInput" type="text" maxlength="80" placeholder="${escapeHtml(placeholder||'')}" autocomplete="off">
+    <p class="modal-error" id="modalPromptError" role="alert"></p>
+    <div class="modal-actions"><button class="btn secondary" id="modalPromptCancel">Cancel</button><button class="btn" id="modalPromptOk">${escapeHtml(okLabel||'Save')}</button></div>
+  </div></div>`;
+  const input=document.getElementById('modalPromptInput'), err=document.getElementById('modalPromptError');
+  const onKey=ev=>{ if(ev.key==='Escape') close(); };
+  const close=()=>{ root.innerHTML=''; document.removeEventListener('keydown',onKey); };
+  const submit=()=>{
+    const v=input.value.trim();
+    if(!v){ err.textContent='Give your deck a name.'; input.focus(); return; }
+    close(); onSubmit(v);
+  };
+  document.getElementById('modalPromptCancel').onclick=close;
+  document.getElementById('modalPromptOk').onclick=submit;
+  input.addEventListener('keydown',ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); submit(); } });
+  input.addEventListener('input',()=>{ err.textContent=''; });
+  root.querySelector('.modal-backdrop').onclick=e=>{ if(e.target===e.currentTarget) close(); };
+  document.addEventListener('keydown',onKey);
+  input.focus();
 }
 function switchTab(tab){ document.querySelector(`#tabs button[data-tab="${tab}"]`)?.click(); }
 function buildStudyPool(deckIds, includeAll){
@@ -1075,6 +1101,79 @@ async function extractPdfText(file){
 function readAsText(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsText(file); }); }
 function readAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
 
+// ---------- AI generation helpers ----------
+const GEN_SYSTEM = 'You are a flashcard generator that only outputs valid JSON. Never write sentences, greetings, questions, or explanations outside the JSON.';
+const TOPIC_RULE = 'If the material is only a topic, a title, or a short request (not full notes), do NOT ask for more material and do NOT reply with prose — use your own knowledge of that topic to write accurate cards. Your entire reply must be the JSON object and nothing else.';
+function genError(kind, message){ const e=new Error(message||kind); e.kind=kind; return e; }
+function findBalanced(t, start){
+  const open=t[start], close=open==='['?']':'}';
+  let depth=0, inStr=false, esc=false;
+  for(let i=start;i<t.length;i++){
+    const c=t[i];
+    if(inStr){ if(esc) esc=false; else if(c==='\\') esc=true; else if(c==='"') inStr=false; continue; }
+    if(c==='"'){ inStr=true; continue; }
+    if(c===open) depth++;
+    else if(c===close){ depth--; if(depth===0) return i; }
+  }
+  return -1;
+}
+function unwrapCards(v){
+  const ok=a=>Array.isArray(a) && a.every(x=>x && typeof x==='object' && !Array.isArray(x));
+  if(ok(v)) return v;
+  if(v && typeof v==='object'){
+    if(ok(v.cards)) return v.cards;
+    for(const k of Object.keys(v)) if(Array.isArray(v[k]) && v[k].length && ok(v[k])) return v[k];
+  }
+  return null;
+}
+// Pulls the cards out of a model reply even if it wrapped the JSON in prose,
+// markdown fences, or <think> blocks. Returns an array, or null if none found.
+function parseCardsJson(raw){
+  let t=String(raw||'').replace(/<think>[\s\S]*?<\/think>/gi,'').trim();
+  t=t.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+  const tryParse=x=>{ try{ return JSON.parse(x); }catch(e){ return undefined; } };
+  let r=unwrapCards(tryParse(t));
+  if(r) return r;
+  for(let i=0;i<t.length;i++){
+    if(t[i]!=='[' && t[i]!=='{') continue;
+    const end=findBalanced(t,i); if(end<0) continue;
+    r=unwrapCards(tryParse(t.slice(i,end+1)));
+    if(r && r.length) return r;
+  }
+  return null;
+}
+async function requestCards(model, promptText, images){
+  const userContent = images.length
+    ? [{type:'text', text:promptText}, ...images.map(u=>({type:'image_url', image_url:{url:u}}))]
+    : promptText;
+  let messages=[{role:'system', content:GEN_SYSTEM},{role:'user', content:userContent}];
+  let jsonMode = images.length===0;   // JSON mode is only used for text-only requests
+  let lastRaw='';
+  for(let attempt=0; attempt<3; attempt++){
+    const body={ model, messages, temperature: attempt ? 0.2 : 0.4 };
+    if(jsonMode) body.response_format={type:'json_object'};
+    const resp = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await resp.json().catch(()=>({}));
+    if(!resp.ok){
+      // Model/endpoint rejected JSON mode (or its JSON check) -> retry without it.
+      if(resp.status===400 && jsonMode){ jsonMode=false; continue; }
+      const msg = typeof data.error==='string' ? data.error : (data.error && data.error.message) || ('API error '+resp.status);
+      throw genError('api', msg);
+    }
+    lastRaw = data.choices?.[0]?.message?.content || '';
+    const parsed = parseCardsJson(lastRaw);
+    if(parsed) return parsed;
+    // Model answered in prose. Show it what went wrong and ask again.
+    messages = [
+      {role:'system', content:GEN_SYSTEM},
+      {role:'user', content:userContent},
+      {role:'assistant', content:String(lastRaw).slice(0,600) || '(empty)'},
+      {role:'user', content:'That was not valid JSON. Reply again with ONLY the JSON object {"cards":[...]} — no sentences, no questions, no markdown. If the material is just a topic, write the cards from your own knowledge of it.'}
+    ];
+  }
+  throw genError('parse', 'The AI kept replying with text instead of cards.');
+}
+
 function renderAI(){
   const el=document.getElementById('tab-ai'), decks=Object.values(state.decks);
   el.innerHTML=`<div class="card">${panelHeader('sparkle','Create with AI','Let AI turn your notes, files, or ideas into a complete deck.')}
@@ -1093,12 +1192,29 @@ function renderAI(){
     <input type="hidden" id="aiCardType" value="basic">
     <p class="sub import-tip">The AI decides how many cards to make from your material and skips cards that duplicate existing fronts. Review the generated cards before saving.</p>
     <label>Save into</label>
-    <select id="aiDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck</option></select>
-    <input id="aiNewName" class="hidden" placeholder="New deck name" style="margin-top:8px;">
+    <select id="aiDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck / set</option></select>
+    <input id="aiNewName" class="hidden" placeholder="New deck or set name" style="margin-top:8px;">
+    <div id="aiSplitWrap" class="hidden"><label>Group into</label>
+      <select id="aiChunkSel"><option value="20" selected>A set of decks — up to 20 cards each</option><option value="10">A set of decks — up to 10 cards each</option><option value="30">A set of decks — up to 30 cards each</option><option value="50">A set of decks — up to 50 cards each</option><option value="0">One single deck</option></select>
+      <p class="sub import-tip" style="margin-top:6px;">Big batches are easier to study in smaller chunks. Decks are split evenly and bundled into one set.</p></div>
     <button class="btn" id="aiBtn" style="margin-top:10px;">${ICONS.sparkle} Generate cards</button>
     <p class="sub" id="aiStatus"></p><div id="aiPreview"></div></div>`;
   const sel=document.getElementById('aiDeckSel');
-  sel.onchange=()=>document.getElementById('aiNewName').classList.toggle('hidden', sel.value!=='__new');
+  const chunkSel=document.getElementById('aiChunkSel');
+  let cardsReady=0;
+  const updateSaveLabel=()=>{
+    const b=document.getElementById('aiSaveBtn'); if(!b) return;
+    const per=parseInt(chunkSel.value,10)||0;
+    if(sel.value==='__new' && per && cardsReady>per){ const n=Math.ceil(cardsReady/per); b.textContent=`Save as a set of ${n} decks`; }
+    else b.textContent = sel.value==='__new' ? 'Save as new deck' : 'Save all to deck';
+  };
+  const syncNewUI=()=>{
+    const isNew=sel.value==='__new';
+    document.getElementById('aiNewName').classList.toggle('hidden', !isNew);
+    document.getElementById('aiSplitWrap').classList.toggle('hidden', !isNew);
+    updateSaveLabel();
+  };
+  sel.onchange=syncNewUI; chunkSel.onchange=updateSaveLabel; syncNewUI();
   const aiFileInput=document.getElementById('aiFileInput');
   document.getElementById('aiChooseBtn').onclick=()=>aiFileInput.click();
   aiFileInput.onchange=e=>updateAIFileList(Array.from(e.target.files||[]));
@@ -1136,10 +1252,12 @@ Before finalizing, check the existing decks listed below. If a fact is already c
 Existing decks:
 ${existingSummary || '(none yet)'}
 
+${TOPIC_RULE}
+
 Material:
 ${combinedText.slice(0,12000)}
 
-Respond with ONLY a JSON array like [{"question":"...","options":["...","...","...","..."],"answer":"..."}] and nothing else — no markdown, no commentary. "answer" must exactly match one of the strings in "options".`
+Respond with ONLY a JSON object like {"cards":[{"question":"...","options":["...","...","...","..."],"answer":"..."}]} and nothing else — no markdown, no commentary. "answer" must exactly match one of the strings in "options".`
       : cardType==='fitb' ? `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality fill-in-the-blank questions.
 Decide the number of questions yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive questions).
 Each question is a sentence from the material with the key term or phrase replaced by ___ (three underscores). For each question, also give an "answers" array listing EVERY acceptable way to fill in that blank correctly — include reasonable synonyms, alternate spellings, abbreviations, singular/plural forms, and with/without accents, so a correct answer isn't marked wrong just for wording. Include at least 2 entries in "answers" whenever a genuine alternate wording exists.
@@ -1147,38 +1265,28 @@ Before finalizing, check the existing decks listed below. If a fact is already c
 Existing decks:
 ${existingSummary || '(none yet)'}
 
+${TOPIC_RULE}
+
 Material:
 ${combinedText.slice(0,12000)}
 
-Respond with ONLY a JSON array like [{"question":"...___...","answers":["...","..."]}] and nothing else — no markdown, no commentary.`
+Respond with ONLY a JSON object like {"cards":[{"question":"...___...","answers":["...","..."]}]} and nothing else — no markdown, no commentary.`
       : `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality flashcards.
 Decide the number of cards yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive cards).
 Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
 Existing decks:
 ${existingSummary || '(none yet)'}
 
+${TOPIC_RULE}
+
 Material:
 ${combinedText.slice(0,12000)}
 
-Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing else — no markdown, no commentary.`;
+Respond with ONLY a JSON object like {"cards":[{"front":"...","back":"..."}]} and nothing else — no markdown, no commentary.`;
 
-      const useVision = images.length>0;
-      const model = useVision ? (VISION_MODEL || MODEL) : MODEL;
-      const content = useVision
-        ? [{type:'text', text:promptText}, ...images.map(u=>({type:'image_url', image_url:{url:u}}))]
-        : promptText;
-
-      const resp = await fetch('/api/generate', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ model, messages:[{role:'user', content}], temperature:0.4 })
-      });
-      const data = await resp.json();
-      if(!resp.ok) throw new Error(data.error || ('API error '+resp.status));
-      const raw = data.choices?.[0]?.message?.content || '';
-      const match = raw.match(/\[[\s\S]*\]/);
-      const parsed = JSON.parse(match ? match[0] : raw);
-      if(!Array.isArray(parsed) || !parsed.length) throw new Error('no cards');
+      const model = images.length>0 ? (VISION_MODEL || MODEL) : MODEL;
+      const parsed = await requestCards(model, promptText, images);
+      if(!parsed.length) throw genError('empty');
 
       let cards;
       if(cardType==='mcq'){
@@ -1207,9 +1315,8 @@ Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing e
         ? `<div class="overflow-x"><table><tr><th>Question</th><th>Accepted answers</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${c.answers.map(a=>escapeHtml(a)).join(', ')}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`
         : `<div class="overflow-x"><table><tr><th>Front</th><th>Back</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${escapeHtml(c.back)}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`;
 
-      document.getElementById('aiSaveBtn').onclick=()=>{
-        let deckId=sel.value;
-        if(deckId==='__new'){ const nm=document.getElementById('aiNewName').value.trim(); if(!nm){toast('Give the new deck a name first.');return;} deckId=ensureDeck(nm); }
+      cardsReady=cards.length; updateSaveLabel();
+      const commitSave=(deckId, newDeckName)=>{
         const existingFronts = new Set(state.decks[deckId].cards.map(c=>c.front.toLowerCase().trim()));
         let saved=0;
         cards.forEach(c=>{
@@ -1227,10 +1334,52 @@ Respond with ONLY a JSON array like [{"front":"...","back":"..."}] and nothing e
         saveDecks();
         document.getElementById('aiStatus').textContent = `Saved ${saved} card(s)${saved<cards.length?' ('+(cards.length-saved)+' skipped as duplicates)':''}.`;
         toast(`Saved ${saved} card(s)${saved<cards.length?' · duplicates skipped':''}.`);
+        if(newDeckName){
+          // Keep the "Save into" list in sync so the next save goes into this deck instead of making another.
+          sel.add(new Option(newDeckName, deckId), sel.options[sel.options.length-1]);
+          sel.value=deckId;
+          const nameInput=document.getElementById('aiNewName'); nameInput.value=''; nameInput.classList.add('hidden');
+        }
         preview.innerHTML=''; renderDecks();
       };
+      const makeCard=c=> c.type==='mcq'
+        ? {id:uid(), type:'mcq', front:c.front, options:c.options, correctIndex:c.correctIndex, back:c.options[c.correctIndex], interval:0, ease:2.5, due:0, reps:0}
+        : c.type==='fitb'
+        ? {id:uid(), type:'fitb', front:c.front, answers:c.answers, back:c.answers[0], interval:0, ease:2.5, due:0, reps:0}
+        : {id:uid(), type:'basic', front:c.front, back:c.back, interval:0, ease:2.5, due:0, reps:0};
+      // Creates a brand-new deck (or a set of evenly split decks) from the generated cards.
+      const commitNew=name=>{
+        const per=parseInt(chunkSel.value,10)||0;
+        const seen=new Set();
+        const uniq=cards.filter(c=>{ const k=c.front.toLowerCase().trim(); if(seen.has(k)) return false; seen.add(k); return true; });
+        if(!per || uniq.length<=per){ commitSave(ensureDeck(name), name); return; }
+        const n=Math.ceil(uniq.length/per), size=Math.ceil(uniq.length/n);
+        const setId=ensureSet(name);
+        for(let i=0;i<n;i++){
+          const deckId=ensureDeck(`${name} · Part ${i+1}`);
+          state.decks[deckId].cards.push(...uniq.slice(i*size,(i+1)*size).map(makeCard));
+          state.sets[setId].deckIds.push(deckId);
+          sel.add(new Option(state.decks[deckId].name, deckId), sel.options[sel.options.length-1]);
+        }
+        saveDecks();
+        const msg=`Saved ${uniq.length} card(s) as a set of ${n} decks (about ${size} each).`;
+        document.getElementById('aiStatus').textContent=msg; toast(msg);
+        const nameInput=document.getElementById('aiNewName'); nameInput.value='';
+        cardsReady=0; preview.innerHTML=''; renderDecks();
+      };
+      document.getElementById('aiSaveBtn').onclick=()=>{
+        if(sel.value!=='__new'){ commitSave(sel.value); return; }
+        const typed=document.getElementById('aiNewName').value.trim();
+        if(typed){ commitNew(typed); return; }
+        showPrompt('Name your new deck','Give it a name before saving. If the cards get split up, this becomes the set name.','e.g. Spanish Verbs','Save', commitNew);
+      };
     }catch(e){
-      document.getElementById('aiStatus').textContent = 'Could not generate cards ('+e.message+'). Make sure GROQ_API_KEY is set on your host and try again.';
+      const msgs={
+        parse:"The AI didn't return valid cards after a few tries. Try again, or add a bit more detail in the notes.",
+        empty:"The AI didn't find anything new to turn into cards. Try adding more material or a different topic.",
+        api:'Could not generate cards ('+e.message+'). Make sure GROQ_API_KEY is set on your host and try again.'
+      };
+      document.getElementById('aiStatus').textContent = msgs[e.kind] || ('Could not generate cards ('+e.message+').');
     }
     btn.disabled=false;
   };
