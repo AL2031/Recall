@@ -313,7 +313,7 @@ function showPrompt(title, message, placeholder, okLabel, onSubmit){
   const close=()=>{ root.innerHTML=''; document.removeEventListener('keydown',onKey); };
   const submit=()=>{
     const v=input.value.trim();
-    if(!v){ err.textContent='Give your deck a name.'; input.focus(); return; }
+    if(!v){ err.textContent='Give it a name.'; input.focus(); return; }
     close(); onSubmit(v);
   };
   document.getElementById('modalPromptCancel').onclick=close;
@@ -1176,7 +1176,7 @@ async function requestCards(model, promptText, images){
 
 function renderAI(){
   const el=document.getElementById('tab-ai'), decks=Object.values(state.decks);
-  el.innerHTML=`<div class="card">${panelHeader('sparkle','Create with AI','Let AI turn your notes, files, or ideas into a complete deck.')}
+  el.innerHTML=`<div class="card">${panelHeader('sparkle','Create with AI','Let AI turn your notes, files, or ideas into a set of study decks.')}
     <label>Attach files (text, .md, .csv, PDF, or images)</label>
     <div class="dropzone" id="aiDropzone">${ICONS.file}<button type="button" class="dropzone-btn" id="aiChooseBtn">Choose Files</button><span class="dropzone-label" id="aiFileLabel">No file chosen</span></div>
     <input type="file" id="aiFileInput" multiple accept=".txt,.md,.csv,.pdf,image/*" class="hidden">
@@ -1190,30 +1190,44 @@ function renderAI(){
       <button type="button" class="typeBtn" data-type="fitb">${ICONS.pencil}<span>Fill in the blank</span></button>
     </div>
     <input type="hidden" id="aiCardType" value="basic">
-    <p class="sub import-tip">The AI decides how many cards to make from your material and skips cards that duplicate existing fronts. Review the generated cards before saving.</p>
-    <label>Save into</label>
-    <select id="aiDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}<option value="__new">+ New deck / set</option></select>
-    <input id="aiNewName" class="hidden" placeholder="New deck or set name" style="margin-top:8px;">
-    <div id="aiSplitWrap" class="hidden"><label>Group into</label>
-      <select id="aiChunkSel"><option value="20" selected>A set of decks — up to 20 cards each</option><option value="10">A set of decks — up to 10 cards each</option><option value="30">A set of decks — up to 30 cards each</option><option value="50">A set of decks — up to 50 cards each</option><option value="0">One single deck</option></select>
-      <p class="sub import-tip" style="margin-top:6px;">Big batches are easier to study in smaller chunks. Decks are split evenly and bundled into one set.</p></div>
+    <p class="sub import-tip">The AI decides how many cards to make from your material and skips cards already in the set you're adding to. Review the generated cards before saving.</p>
+    <label>Add to set</label>
+    <select id="aiSetSel"></select>
+    <input id="aiNewName" class="hidden" placeholder="New set name" style="margin-top:8px;">
+    <label>Cards per deck</label>
+    <select id="aiChunkSel"><option value="20" selected>Up to 20 cards</option><option value="10">Up to 10 cards</option><option value="30">Up to 30 cards</option><option value="50">Up to 50 cards</option></select>
+    <p class="sub import-tip" style="margin-top:6px;">New cards are split evenly into decks of this size and added to the set, so you can study one deck at a time.</p>
     <button class="btn" id="aiBtn" style="margin-top:10px;">${ICONS.sparkle} Generate cards</button>
     <p class="sub" id="aiStatus"></p><div id="aiPreview"></div></div>`;
-  const sel=document.getElementById('aiDeckSel');
+  const sel=document.getElementById('aiSetSel');
   const chunkSel=document.getElementById('aiChunkSel');
-  let cardsReady=0;
+  const nameInput=document.getElementById('aiNewName');
+  let readyCards=[];
+  const setLabel=st=>{ const ds=setDeckIds(st); return `${st.name} · ${ds.length} deck${ds.length===1?'':'s'} · ${cardCountForDeckIds(ds)} cards`; };
+  const fillSetOptions=selectedId=>{
+    sel.innerHTML='<option value="__new">+ New set</option>'+Object.values(state.sets).map(st=>`<option value="${st.id}">${escapeHtml(setLabel(st))}</option>`).join('');
+    sel.value=(selectedId && state.sets[selectedId]) ? selectedId : '__new';
+  };
+  // fronts already present anywhere in the selected set (empty when making a new set)
+  const targetFronts=()=>{
+    const have=new Set(), st=state.sets[sel.value];
+    if(st) setDeckIds(st).forEach(id=>state.decks[id].cards.forEach(c=>have.add(c.front.toLowerCase().trim())));
+    return have;
+  };
+  const freshFrom=list=>{
+    const seen=targetFronts();
+    return list.filter(c=>{ const k=c.front.toLowerCase().trim(); if(seen.has(k)) return false; seen.add(k); return true; });
+  };
   const updateSaveLabel=()=>{
     const b=document.getElementById('aiSaveBtn'); if(!b) return;
-    const per=parseInt(chunkSel.value,10)||0;
-    if(sel.value==='__new' && per && cardsReady>per){ const n=Math.ceil(cardsReady/per); b.textContent=`Save as a set of ${n} decks`; }
-    else b.textContent = sel.value==='__new' ? 'Save as new deck' : 'Save all to deck';
+    const fresh=freshFrom(readyCards);
+    const per=parseInt(chunkSel.value,10)||20, n=Math.ceil(fresh.length/per);
+    if(!fresh.length) b.textContent='Nothing new to add';
+    else if(sel.value==='__new') b.textContent = n>1 ? `Save as a set of ${n} decks` : 'Save as a new set';
+    else b.textContent=`Add ${fresh.length} card${fresh.length===1?'':'s'} to set (${n} new deck${n===1?'':'s'})`;
   };
-  const syncNewUI=()=>{
-    const isNew=sel.value==='__new';
-    document.getElementById('aiNewName').classList.toggle('hidden', !isNew);
-    document.getElementById('aiSplitWrap').classList.toggle('hidden', !isNew);
-    updateSaveLabel();
-  };
+  const syncNewUI=()=>{ nameInput.classList.toggle('hidden', sel.value!=='__new'); updateSaveLabel(); };
+  fillSetOptions('__new');
   sel.onchange=syncNewUI; chunkSel.onchange=updateSaveLabel; syncNewUI();
   const aiFileInput=document.getElementById('aiFileInput');
   document.getElementById('aiChooseBtn').onclick=()=>aiFileInput.click();
@@ -1239,10 +1253,19 @@ function renderAI(){
       }
       if(!combinedText.trim() && !images.length){ toast('Add notes or attach at least one file first.'); btn.disabled=false; document.getElementById('aiStatus').textContent=''; return; }
 
-      // existing-deck context to avoid duplicates
-      const existingSummary = Object.values(state.decks).map(d=>
+      // existing context to avoid duplicates: the whole target set, plus a lighter look at other decks
+      const targetSet=state.sets[sel.value];
+      const targetIds=new Set(targetSet ? setDeckIds(targetSet) : []);
+      let setContext='';
+      if(targetSet){
+        const fronts=[...targetIds].flatMap(id=>state.decks[id].cards.map(c=>c.front));
+        let joined=fronts.join(' | '); if(joined.length>6000) joined=joined.slice(0,6000)+' …';
+        setContext=`You are ADDING to the existing set "${targetSet.name}", which already has ${fronts.length} card(s) across ${targetIds.size} deck(s). Continue with new material and do NOT repeat anything it already covers. Every front already in this set: ${joined||'(none yet)'}\n`;
+      }
+      const otherSummary = Object.values(state.decks).filter(d=>!targetIds.has(d.id)).map(d=>
         `Deck "${d.name}" already has ${d.cards.length} card(s), fronts include: ${d.cards.slice(0,25).map(c=>c.front).join(' | ')}`
-      ).join('\n');
+      ).join('\n').slice(0,4000);
+      const existingSummary = setContext + otherSummary;
 
       document.getElementById('aiStatus').innerHTML='<span class="spinner"></span> Generating cards…';
       const promptText = cardType==='mcq' ? `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality multiple-choice questions.
@@ -1315,63 +1338,41 @@ Respond with ONLY a JSON object like {"cards":[{"front":"...","back":"..."}]} an
         ? `<div class="overflow-x"><table><tr><th>Question</th><th>Accepted answers</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${c.answers.map(a=>escapeHtml(a)).join(', ')}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`
         : `<div class="overflow-x"><table><tr><th>Front</th><th>Back</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${escapeHtml(c.back)}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`;
 
-      cardsReady=cards.length; updateSaveLabel();
-      const commitSave=(deckId, newDeckName)=>{
-        const existingFronts = new Set(state.decks[deckId].cards.map(c=>c.front.toLowerCase().trim()));
-        let saved=0;
-        cards.forEach(c=>{
-          if(!existingFronts.has(c.front.toLowerCase().trim())){
-            if(c.type==='mcq'){
-              state.decks[deckId].cards.push({id:uid(), type:'mcq', front:c.front, options:c.options, correctIndex:c.correctIndex, back:c.options[c.correctIndex], interval:0, ease:2.5, due:0, reps:0});
-            }else if(c.type==='fitb'){
-              state.decks[deckId].cards.push({id:uid(), type:'fitb', front:c.front, answers:c.answers, back:c.answers[0], interval:0, ease:2.5, due:0, reps:0});
-            }else{
-              state.decks[deckId].cards.push({id:uid(), type:'basic', front:c.front, back:c.back, interval:0, ease:2.5, due:0, reps:0});
-            }
-            saved++;
-          }
-        });
-        saveDecks();
-        document.getElementById('aiStatus').textContent = `Saved ${saved} card(s)${saved<cards.length?' ('+(cards.length-saved)+' skipped as duplicates)':''}.`;
-        toast(`Saved ${saved} card(s)${saved<cards.length?' · duplicates skipped':''}.`);
-        if(newDeckName){
-          // Keep the "Save into" list in sync so the next save goes into this deck instead of making another.
-          sel.add(new Option(newDeckName, deckId), sel.options[sel.options.length-1]);
-          sel.value=deckId;
-          const nameInput=document.getElementById('aiNewName'); nameInput.value=''; nameInput.classList.add('hidden');
-        }
-        preview.innerHTML=''; renderDecks();
-      };
+      readyCards=cards; updateSaveLabel();
       const makeCard=c=> c.type==='mcq'
         ? {id:uid(), type:'mcq', front:c.front, options:c.options, correctIndex:c.correctIndex, back:c.options[c.correctIndex], interval:0, ease:2.5, due:0, reps:0}
         : c.type==='fitb'
         ? {id:uid(), type:'fitb', front:c.front, answers:c.answers, back:c.answers[0], interval:0, ease:2.5, due:0, reps:0}
         : {id:uid(), type:'basic', front:c.front, back:c.back, interval:0, ease:2.5, due:0, reps:0};
-      // Creates a brand-new deck (or a set of evenly split decks) from the generated cards.
-      const commitNew=name=>{
-        const per=parseInt(chunkSel.value,10)||0;
-        const seen=new Set();
-        const uniq=cards.filter(c=>{ const k=c.front.toLowerCase().trim(); if(seen.has(k)) return false; seen.add(k); return true; });
-        if(!per || uniq.length<=per){ commitSave(ensureDeck(name), name); return; }
-        const n=Math.ceil(uniq.length/per), size=Math.ceil(uniq.length/n);
-        const setId=ensureSet(name);
+      // Adds the cards to the selected set (or a brand-new one) as new decks, split evenly.
+      const commitAdd=newSetName=>{
+        const isNew=sel.value==='__new';
+        const fresh=freshFrom(cards);
+        if(!fresh.length){ const m='Nothing new to add — every card is already in this set.'; document.getElementById('aiStatus').textContent=m; toast(m); return; }
+        const per=parseInt(chunkSel.value,10)||20, n=Math.ceil(fresh.length/per), size=Math.ceil(fresh.length/n);
+        const setId=isNew ? ensureSet(newSetName) : sel.value;
+        const st=state.sets[setId];
+        const used=new Set(Object.values(state.decks).map(d=>d.name));
+        let part=setDeckIds(st).length;
         for(let i=0;i<n;i++){
-          const deckId=ensureDeck(`${name} · Part ${i+1}`);
-          state.decks[deckId].cards.push(...uniq.slice(i*size,(i+1)*size).map(makeCard));
-          state.sets[setId].deckIds.push(deckId);
-          sel.add(new Option(state.decks[deckId].name, deckId), sel.options[sel.options.length-1]);
+          let name; do{ part++; name=`${st.name} · Part ${part}`; }while(used.has(name));
+          used.add(name);
+          const deckId=ensureDeck(name);
+          state.decks[deckId].cards.push(...fresh.slice(i*size,(i+1)*size).map(makeCard));
+          st.deckIds.push(deckId);
         }
         saveDecks();
-        const msg=`Saved ${uniq.length} card(s) as a set of ${n} decks (about ${size} each).`;
-        document.getElementById('aiStatus').textContent=msg; toast(msg);
-        const nameInput=document.getElementById('aiNewName'); nameInput.value='';
-        cardsReady=0; preview.innerHTML=''; renderDecks();
+        const skipped=cards.length-fresh.length;
+        const m=`Added ${fresh.length} card(s) to "${st.name}" in ${n} new deck${n===1?'':'s'}${skipped?` (${skipped} duplicate${skipped===1?'':'s'} skipped)`:''}.`;
+        document.getElementById('aiStatus').textContent=m; toast(m);
+        readyCards=[]; nameInput.value=''; fillSetOptions(setId); syncNewUI();
+        preview.innerHTML=''; renderDecks();
       };
       document.getElementById('aiSaveBtn').onclick=()=>{
-        if(sel.value!=='__new'){ commitSave(sel.value); return; }
-        const typed=document.getElementById('aiNewName').value.trim();
-        if(typed){ commitNew(typed); return; }
-        showPrompt('Name your new deck','Give it a name before saving. If the cards get split up, this becomes the set name.','e.g. Spanish Verbs','Save', commitNew);
+        if(sel.value!=='__new'){ commitAdd(); return; }
+        const typed=nameInput.value.trim();
+        if(typed){ commitAdd(typed); return; }
+        showPrompt('Name your new set','Give the set a name. Its decks will be called "Name · Part 1", "Name · Part 2" and so on.','e.g. Spanish Verbs','Save', commitAdd);
       };
     }catch(e){
       const msgs={
