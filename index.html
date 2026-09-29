@@ -200,6 +200,14 @@ label{margin-top:14px;}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important;}}
 
+/* Card-count control (AI tab) */
+.type-toggle.count-toggle{display:flex;}
+.count-fields{display:flex;gap:10px;margin-top:10px;}
+.count-fields > div{flex:1;min-width:0;}
+.count-fields label{margin-top:0;}
+.count-hint{margin:8px 0 0;font-size:13px;color:var(--sub);}
+.count-hint.error{color:var(--danger);font-weight:600;}
+input.invalid{border-color:var(--danger);}
 </style>
 </head>
 <body>
@@ -1105,6 +1113,42 @@ function readAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileRe
 const GEN_SYSTEM = 'You are a flashcard generator that only outputs valid JSON. Never write sentences, greetings, questions, or explanations outside the JSON.';
 const TOPIC_RULE = 'If the material is only a topic, a title, or a short request (not full notes), do NOT ask for more material and do NOT reply with prose — use your own knowledge of that topic to write accurate cards. Your entire reply must be the JSON object and nothing else.';
 function genError(kind, message){ const e=new Error(message||kind); e.kind=kind; return e; }
+
+// ---- Card-count settings ----
+// MAX_CARDS caps what can be requested; BATCH_CARDS is the most we ask the AI for in one go
+// (long lists get cut off or sloppy), so bigger targets are built up over several requests.
+const MIN_CARDS=1, MAX_CARDS=100, BATCH_CARDS=40, MAX_ROUNDS=6;
+const cardWord=k=>`${k} card${k===1?'':'s'}`;
+// Reads and validates the "Number of cards" controls -> {mode, min, max} or {mode, error, bad:[ids]}
+function readCountSetting(){
+  const mode=document.getElementById('aiCountMode').value;
+  if(mode==='auto') return {mode, min:0, max:Infinity};
+  const num=id=>parseInt(document.getElementById(id).value,10);
+  const ok=v=>Number.isInteger(v) && v>=MIN_CARDS && v<=MAX_CARDS;
+  const rangeMsg=`Enter a whole number from ${MIN_CARDS} to ${MAX_CARDS}.`;
+  if(mode==='exact'){
+    const n=num('aiCountExact');
+    return ok(n) ? {mode, min:n, max:n} : {mode, error:rangeMsg, bad:['aiCountExact']};
+  }
+  const lo=num('aiCountMin'), hi=num('aiCountMax');
+  const bad=[]; if(!ok(lo)) bad.push('aiCountMin'); if(!ok(hi)) bad.push('aiCountMax');
+  if(bad.length) return {mode, error:rangeMsg, bad};
+  if(lo>hi) return {mode, error:"Minimum can't be more than maximum.", bad:['aiCountMin','aiCountMax']};
+  return {mode, min:lo, max:hi};
+}
+function describeCount(s){
+  if(s.mode==='auto') return 'The AI picks a sensible number based on how much your material covers.';
+  if(s.min===s.max) return `The AI will aim for exactly ${cardWord(s.min)}.`;
+  return `The AI will make between ${s.min} and ${cardWord(s.max)}, depending on how much your material covers.`;
+}
+// The sentence dropped into the prompt that tells the AI how many to write.
+function countInstruction(noun, lo, hi){
+  if(lo===hi) return `Write EXACTLY ${lo} ${noun}${lo===1?'':'s'} — no more and no fewer. If the material has fewer distinct facts than that, cover the wider topic using your own knowledge instead of repeating yourself or padding with trivial ${noun}s.`;
+  return `Write between ${lo} and ${hi} ${noun}s (inclusive) — never fewer than ${lo} and never more than ${hi}. Pick the number within that range based on how much distinct, testable content there is; if the material is thin, cover the wider topic with your own knowledge rather than repeating yourself or padding with trivial ${noun}s.`;
+}
+function autoCountInstruction(noun){
+  return `Decide the number of ${noun}s yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive ${noun}s).`;
+}
 function findBalanced(t, start){
   const open=t[start], close=open==='['?']':'}';
   let depth=0, inStr=false, esc=false;
@@ -1190,7 +1234,22 @@ function renderAI(){
       <button type="button" class="typeBtn" data-type="fitb">${ICONS.pencil}<span>Fill in the blank</span></button>
     </div>
     <input type="hidden" id="aiCardType" value="basic">
-    <p class="sub import-tip">The AI decides how many cards to make from your material and skips cards already in the set you're adding to. Review the generated cards before saving.</p>
+    <label>Number of cards</label>
+    <div class="type-toggle count-toggle">
+      <button type="button" class="countBtn" data-mode="exact"><span>Exact</span></button>
+      <button type="button" class="countBtn" data-mode="range"><span>Range</span></button>
+      <button type="button" class="countBtn active" data-mode="auto"><span>AI decides</span></button>
+    </div>
+    <input type="hidden" id="aiCountMode" value="auto">
+    <div class="count-fields hidden" id="aiCountExactWrap">
+      <div><label for="aiCountExact">Exactly</label><input type="number" id="aiCountExact" min="${MIN_CARDS}" max="${MAX_CARDS}" step="1" value="20" inputmode="numeric"></div>
+    </div>
+    <div class="count-fields hidden" id="aiCountRangeWrap">
+      <div><label for="aiCountMin">Minimum</label><input type="number" id="aiCountMin" min="${MIN_CARDS}" max="${MAX_CARDS}" step="1" value="10" inputmode="numeric"></div>
+      <div><label for="aiCountMax">Maximum</label><input type="number" id="aiCountMax" min="${MIN_CARDS}" max="${MAX_CARDS}" step="1" value="20" inputmode="numeric"></div>
+    </div>
+    <p class="count-hint" id="aiCountHint"></p>
+    <p class="sub import-tip">Cards already in the set you're adding to are skipped, so you won't get duplicates. Review the generated cards before saving.</p>
     <label>Add to set</label>
     <select id="aiSetSel"></select>
     <input id="aiNewName" class="hidden" placeholder="New set name" style="margin-top:8px;">
@@ -1238,7 +1297,37 @@ function renderAI(){
     document.getElementById('aiCardType').value=b.dataset.type;
   });
 
+  // "Number of cards" controls: mode toggle + live hint + validation styling
+  const countIds=['aiCountExact','aiCountMin','aiCountMax'];
+  const refreshCount=()=>{
+    const s=readCountSetting();
+    document.getElementById('aiCountExactWrap').classList.toggle('hidden', s.mode!=='exact');
+    document.getElementById('aiCountRangeWrap').classList.toggle('hidden', s.mode!=='range');
+    countIds.forEach(id=>document.getElementById(id).classList.toggle('invalid', !!(s.bad && s.bad.includes(id))));
+    const hint=document.getElementById('aiCountHint');
+    hint.classList.toggle('error', !!s.error);
+    hint.textContent = s.error || describeCount(s);
+  };
+  el.querySelectorAll('.countBtn').forEach(b=>b.onclick=()=>{
+    el.querySelectorAll('.countBtn').forEach(x=>x.classList.toggle('active', x===b));
+    document.getElementById('aiCountMode').value=b.dataset.mode;
+    refreshCount();
+  });
+  countIds.forEach(id=>{
+    const inp=document.getElementById(id);
+    inp.oninput=refreshCount;
+    // when leaving a field, pull out-of-bounds numbers back into the allowed range
+    inp.onchange=()=>{
+      const v=parseInt(inp.value,10);
+      if(Number.isFinite(v)) inp.value=Math.min(MAX_CARDS, Math.max(MIN_CARDS, v));
+      refreshCount();
+    };
+  });
+  refreshCount();
+
   document.getElementById('aiBtn').onclick=async ()=>{
+    const count=readCountSetting();
+    if(count.error){ toast(count.error); refreshCount(); return; }
     const notes=document.getElementById('aiInput').value.trim();
     const cardType=document.getElementById('aiCardType').value;
     const btn=document.getElementById('aiBtn');
@@ -1267,13 +1356,14 @@ function renderAI(){
       ).join('\n').slice(0,4000);
       const existingSummary = setContext + otherSummary;
 
-      document.getElementById('aiStatus').innerHTML='<span class="spinner"></span> Generating cards…';
-      const promptText = cardType==='mcq' ? `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality multiple-choice questions.
-Decide the number of questions yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive questions).
+      const noun = cardType==='basic' ? 'card' : 'question';
+      // countText = how many to write; existing = what the AI should avoid repeating
+      const makePrompt=(countText, existing)=> cardType==='mcq' ? `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality multiple-choice questions.
+${countText}
 Each question needs exactly 4 answer options with exactly one correct answer. Make the incorrect options plausible, not silly or obviously wrong.
 Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
 Existing decks:
-${existingSummary || '(none yet)'}
+${existing || '(none yet)'}
 
 ${TOPIC_RULE}
 
@@ -1282,11 +1372,11 @@ ${combinedText.slice(0,12000)}
 
 Respond with ONLY a JSON object like {"cards":[{"question":"...","options":["...","...","...","..."],"answer":"..."}]} and nothing else — no markdown, no commentary. "answer" must exactly match one of the strings in "options".`
       : cardType==='fitb' ? `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality fill-in-the-blank questions.
-Decide the number of questions yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive questions).
+${countText}
 Each question is a sentence from the material with the key term or phrase replaced by ___ (three underscores). For each question, also give an "answers" array listing EVERY acceptable way to fill in that blank correctly — include reasonable synonyms, alternate spellings, abbreviations, singular/plural forms, and with/without accents, so a correct answer isn't marked wrong just for wording. Include at least 2 entries in "answers" whenever a genuine alternate wording exists.
 Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
 Existing decks:
-${existingSummary || '(none yet)'}
+${existing || '(none yet)'}
 
 ${TOPIC_RULE}
 
@@ -1295,10 +1385,10 @@ ${combinedText.slice(0,12000)}
 
 Respond with ONLY a JSON object like {"cards":[{"question":"...___...","answers":["...","..."]}]} and nothing else — no markdown, no commentary.`
       : `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality flashcards.
-Decide the number of cards yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive cards).
+${countText}
 Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
 Existing decks:
-${existingSummary || '(none yet)'}
+${existing || '(none yet)'}
 
 ${TOPIC_RULE}
 
@@ -1308,29 +1398,58 @@ ${combinedText.slice(0,12000)}
 Respond with ONLY a JSON object like {"cards":[{"front":"...","back":"..."}]} and nothing else — no markdown, no commentary.`;
 
       const model = images.length>0 ? (VISION_MODEL || MODEL) : MODEL;
-      const parsed = await requestCards(model, promptText, images);
-      if(!parsed.length) throw genError('empty');
-
-      let cards;
+      const normalize=parsed=>{
       if(cardType==='mcq'){
-        cards = parsed.map(c=>{
+        return parsed.map(c=>{
           const options=Array.isArray(c.options) ? c.options.map(o=>String(o).trim()).filter(Boolean) : [];
           let correctIndex=options.findIndex(o=>o.toLowerCase()===String(c.answer||'').trim().toLowerCase());
           if(correctIndex<0) correctIndex=0;
           return { type:'mcq', front:String(c.question||'').trim(), options, correctIndex };
         }).filter(c=>c.front && c.options.length>=2);
       }else if(cardType==='fitb'){
-        cards = parsed.map(c=>({
+        return parsed.map(c=>({
           type:'fitb',
           front:String(c.question||'').trim(),
           answers: Array.isArray(c.answers) ? c.answers.map(a=>String(a).trim()).filter(Boolean) : []
         })).filter(c=>c.front && c.answers.length);
       }else{
-        cards = parsed.map(c=>({ type:'basic', front:String(c.front||'').trim(), back:String(c.back||'').trim() })).filter(c=>c.front && c.back);
+        return parsed.map(c=>({ type:'basic', front:String(c.front||'').trim(), back:String(c.back||'').trim() })).filter(c=>c.front && c.back);
       }
-      if(!cards.length) throw new Error('no usable cards');
+      };
+      const fetchRound=async (countText, existing)=> normalize(await requestCards(model, makePrompt(countText, existing), images));
+      const statusEl=document.getElementById('aiStatus');
 
-      document.getElementById('aiStatus').textContent = `Generated ${cards.length} card(s). Review below, then save.`;
+      let cards=[];
+      if(count.mode==='auto'){
+        statusEl.innerHTML='<span class="spinner"></span> Generating cards…';
+        cards = freshFrom(await fetchRound(autoCountInstruction(noun), existingSummary));
+      }else{
+        // Ask in batches until the minimum is reached, then trim anything over the maximum.
+        const goal = count.min===count.max ? String(count.min) : `${count.min}–${count.max}`;
+        for(let round=0; round<MAX_ROUNDS && cards.length<count.min; round++){
+          const have=cards.length, remaining=count.min-have;
+          const lo=Math.min(remaining, BATCH_CARDS), hi=Math.min(count.max-have, BATCH_CARDS);
+          const avoid = have ? `Cards already written in this run — do NOT repeat or rephrase any of them: ${cards.map(c=>c.front).join(' | ').slice(0,4000)}\n` : '';
+          statusEl.innerHTML=`<span class="spinner"></span> Generating cards… ${have} so far (target ${goal})`;
+          let batch;
+          try{ batch = await fetchRound(countInstruction(noun, lo, hi), avoid+existingSummary); }
+          catch(err){ if(round===0) throw err; break; }   // keep what we already have if a later batch fails
+          const merged = freshFrom(cards.concat(batch));  // drops duplicates within this run and vs. the target set
+          if(merged.length===cards.length) break;         // nothing new came back — stop asking
+          cards = merged;
+        }
+        cards = cards.slice(0, count.max);
+      }
+      if(!cards.length) throw genError('empty');
+
+      {
+        const n=cards.length;
+        let msg;
+        if(count.mode==='auto') msg=`Generated ${cardWord(n)}.`;
+        else if(n<count.min) msg=`Generated ${cardWord(n)} — fewer than the ${count.min===count.max ? count.min : 'minimum of '+count.min} you asked for. The material may not have enough distinct content; try ${count.min===count.max ? 'a lower number' : 'a lower minimum'} or add more notes.`;
+        else msg = count.min===count.max ? `Generated exactly ${cardWord(n)}.` : `Generated ${cardWord(n)} (range ${count.min}–${count.max}).`;
+        document.getElementById('aiStatus').textContent = msg+' Review below, then save.';
+      }
       const preview = document.getElementById('aiPreview');
       preview.innerHTML = cardType==='mcq'
         ? `<div class="overflow-x"><table><tr><th>Question</th><th>Options</th><th>Correct</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${c.options.map(o=>escapeHtml(o)).join('<br>')}</td><td>${escapeHtml(c.options[c.correctIndex])}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`
