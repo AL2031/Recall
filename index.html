@@ -1117,7 +1117,7 @@ function genError(kind, message){ const e=new Error(message||kind); e.kind=kind;
 // ---- Card-count settings ----
 // MAX_CARDS caps what can be requested; BATCH_CARDS is the most we ask the AI for in one go
 // (long lists get cut off or sloppy), so bigger targets are built up over several requests.
-const MIN_CARDS=1, MAX_CARDS=1000, BATCH_CARDS=40, MAX_ROUNDS=6;
+const MIN_CARDS=1, MAX_CARDS=1000, BATCH_CARDS=50, MAX_ROUNDS=100;
 const cardWord=k=>`${k} card${k===1?'':'s'}`;
 // Reads and validates the "Number of cards" controls -> {mode, min, max} or {mode, error, bad:[ids]}
 function readCountSetting(){
