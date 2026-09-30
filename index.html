@@ -1111,7 +1111,7 @@ function readAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileRe
 
 // ---------- AI generation helpers ----------
 const GEN_SYSTEM = 'You are a flashcard generator that only outputs valid JSON. Never write sentences, greetings, questions, or explanations outside the JSON.';
-const TOPIC_RULE = 'If the material is only a topic, a title, or a short request (not full notes), do NOT ask for more material and do NOT reply with prose — use your own knowledge of that topic to write accurate cards. Your entire reply must be the JSON object and nothing else.';
+const TOPIC_RULE = 'If the material is only a topic, a title, or a short request (not full notes), do NOT ask for more material and do NOT reply with prose — use your own knowledge of that topic to write accurate cards. Your entire reply must be the JSON object and nothing else. Always make sure to generate the exact number of flashcards the user asks for.';
 function genError(kind, message){ const e=new Error(message||kind); e.kind=kind; return e; }
 
 // ---- Card-count settings ----
