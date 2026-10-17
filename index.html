@@ -7,7 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/[email protected]/build/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.9.0/mammoth.browser.min.js"></script>
 <style>
 :root{--bg:#eeede9;--panel:#fff;--text:#1a1917;--sub:#69675f;--border:#dedcd4;--accent:#81b64c;--accent-dark:#6a9c3f;--accent-soft:rgba(129,182,76,.15);--ink:#fff;--danger:#c2392f;--hard:#d9a23b;--easy:#4c8bf5;--header-bg:#262421;--header-ink:#e9e8e4;--header-sub:#9c9a94;}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--panel:#211f1c;--text:#eae9e5;--sub:#a3a099;--border:#33312c;--header-bg:#1a1917;--accent-soft:rgba(129,182,76,.18);}}
@@ -208,6 +209,172 @@ label{margin-top:14px;}
 .count-hint{margin:8px 0 0;font-size:13px;color:var(--sub);}
 .count-hint.error{color:var(--danger);font-weight:600;}
 input.invalid{border-color:var(--danger);}
+
+
+/* ================================================================
+   RECALL REDESIGN — calmer surfaces, clearer hierarchy, responsive UI
+   ================================================================ */
+:root{
+  color-scheme:light;
+  --bg:#f5f6fb;--panel:#ffffff;--text:#20243a;--sub:#737991;--border:#e5e7f0;
+  --accent:#6d5ce8;--accent-dark:#5543cf;--accent-soft:rgba(109,92,232,.11);--ink:#fff;
+  --danger:#d94b56;--hard:#e7a23c;--easy:#3887ef;--header-bg:rgba(255,255,255,.92);
+  --header-ink:#20243a;--header-sub:#737991;--shadow:0 12px 35px rgba(28,35,71,.055);
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;--bg:#11131c;--panel:#191c29;--text:#f1f2fc;--sub:#a0a6bf;--border:#2d3144;
+  --accent:#9b8cff;--accent-dark:#8170f1;--accent-soft:rgba(155,140,255,.15);--ink:#fff;
+  --danger:#ff737d;--hard:#edb65f;--easy:#69a8ff;--header-bg:rgba(25,28,41,.94);
+  --header-ink:#f1f2fc;--header-sub:#a0a6bf;--shadow:0 12px 35px rgba(0,0,0,.16);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--bg:#11131c;--panel:#191c29;--text:#f1f2fc;--sub:#a0a6bf;--border:#2d3144;
+  --accent:#9b8cff;--accent-dark:#8170f1;--accent-soft:rgba(155,140,255,.15);--ink:#fff;
+  --danger:#ff737d;--hard:#edb65f;--easy:#69a8ff;--header-bg:rgba(25,28,41,.94);
+  --header-ink:#f1f2fc;--header-sub:#a0a6bf;--shadow:0 12px 35px rgba(0,0,0,.16);
+}}
+html{scroll-padding-top:90px;}
+body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;}
+header{position:sticky;top:0;grid-template-columns:auto minmax(0,1fr) auto;gap:clamp(14px,3vw,42px);padding:12px clamp(16px,4vw,48px);background:var(--header-bg);border-bottom:1px solid var(--border);box-shadow:0 5px 22px rgba(25,31,68,.045);backdrop-filter:blur(18px);}
+.brand{gap:11px;}
+.logo-badge{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#8273ff,#5d4ad4);box-shadow:0 7px 16px rgba(109,92,232,.24);}
+.logo-badge svg{width:21px;height:21px;}
+h1{color:var(--header-ink);font-size:21px;letter-spacing:-.7px;font-weight:800;}
+nav{gap:5px;justify-content:flex-start;}
+nav button{min-height:42px;padding:9px 13px;border-radius:12px;color:var(--header-sub);font-size:13px;font-weight:700;}
+nav button.active{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(109,92,232,.08);}
+nav button.active svg{color:var(--accent);}
+nav button:hover:not(.active){background:rgba(125,129,155,.09);color:var(--header-ink);}
+.header-actions{gap:12px;}
+.header-streak{display:flex;align-items:center;gap:5px;padding:8px 11px;border:1px solid #f7d8be;background:#fff7ed;color:#aa5422;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;}
+.header-streak strong{font-size:14px;color:#9d4318;}
+.icon-btn{width:40px;height:40px;color:var(--header-ink);background:var(--bg);border:1px solid var(--border);border-radius:12px;}
+.icon-btn:hover{background:var(--accent-soft);border-color:var(--accent);}
+main{max-width:1200px;padding:30px clamp(14px,3vw,32px) 88px;margin:0 auto;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;margin:0;box-shadow:var(--shadow);}
+.panel-header{align-items:center;gap:14px;margin-bottom:22px;}
+.panel-icon{width:48px;height:48px;border-radius:15px;background:var(--accent-soft);color:var(--accent);}
+.panel-icon svg{width:23px;height:23px;}
+.panel-title{font-size:21px;letter-spacing:-.55px;font-weight:800;color:var(--text);}
+.panel-sub{font-size:13px;max-width:54ch;}
+button.btn{min-height:43px;padding:10px 16px;border:1px solid transparent;border-radius:12px;background:var(--accent);border-bottom:1px solid var(--accent-dark);font-size:13px;font-weight:800;box-shadow:0 4px 10px rgba(109,92,232,.12);}
+button.btn:hover:not(:disabled){background:var(--accent-dark);box-shadow:0 7px 17px rgba(109,92,232,.2);}
+button.btn.secondary{background:var(--panel);color:var(--text);border:1px solid var(--border);box-shadow:none;}
+button.btn.secondary:hover:not(:disabled){background:var(--accent-soft);color:var(--accent);border-color:rgba(109,92,232,.32);}
+button.btn.danger{color:var(--danger);background:var(--panel);border-color:rgba(217,75,86,.28);box-shadow:none;}
+button.btn:disabled{box-shadow:none;}
+input,textarea,select{min-height:44px;padding:11px 13px;border-radius:11px;border:1px solid var(--border);background:var(--panel);font-size:14px;}
+textarea{min-height:145px;line-height:1.6;}
+input:focus,textarea:focus,select:focus,button:focus-visible,.mcq-opt:focus-visible,.dropzone:focus-within{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);}
+label{font-size:12px;letter-spacing:.01em;font-weight:800;color:var(--text);margin:17px 0 7px;}
+.sub{font-size:12px;line-height:1.55;}
+.chip{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:5px 10px;font-size:11px;}
+.study-card{min-height:310px;background:linear-gradient(145deg,var(--bg),var(--panel));border:1px solid var(--border);border-radius:20px;box-shadow:none;font-weight:700;}
+.study-card:hover{box-shadow:0 12px 30px rgba(38,44,83,.07);}
+.study-progress{height:8px;background:var(--bg);border:1px solid var(--border);}
+.study-progress>span{background:linear-gradient(90deg,#8172ff,#5c49d8);}
+.grade-row button{border-radius:13px;min-height:64px;}
+.grade-row button.btn.grade-again{background:var(--danger);border-color:#c73d49;}
+.grade-row button.btn.grade-hard{background:var(--hard);border-color:#ca8426;color:#fff;}
+.grade-row button.btn.grade-good{background:#2eaa7b;border-color:#16845b;}
+.grade-row button.btn.grade-easy{background:var(--easy);border-color:#236bcc;}
+.mcq-opt{background:var(--panel);border-radius:12px;border-color:var(--border);}
+.mcq-opt:hover:not(:disabled){background:var(--accent-soft);border-color:var(--accent);}
+.mcq-opt.correct{background:#2eaa7b;border-color:#16845b;}
+.mcq-opt.wrong{background:var(--danger);border-color:#c73d49;}
+.type-toggle{gap:7px;padding:5px;background:var(--bg);border:1px solid var(--border);border-radius:14px;}
+.type-toggle button{border:1px solid transparent;border-radius:10px;background:transparent;min-height:43px;color:var(--sub);}
+.type-toggle button.active{background:var(--panel);color:var(--accent);border-color:rgba(109,92,232,.18);box-shadow:0 3px 10px rgba(28,35,71,.06);}
+.dropzone{min-height:82px;border-radius:14px;border:1.5px dashed #c9cce0;background:var(--bg);padding:18px;}
+.dropzone.is-dragover{border-color:var(--accent);background:var(--accent-soft);}
+.dropzone-btn{border-radius:10px;padding:9px 13px;border-color:var(--border);}
+.filelist span{border-radius:999px;padding:5px 10px;}
+.import-tip{background:var(--accent-soft);border:1px solid rgba(109,92,232,.14);border-radius:12px;padding:12px 14px;}
+.deck-row,.deck-list-item{padding:16px 5px;}
+.deck-row+.deck-row,.deck-list-item+.deck-list-item{border-color:var(--border);}
+.deck-row-icon{width:44px;height:44px;border-radius:13px;}
+.deck-actions .btn{border-radius:10px;}
+.stat-card{border-radius:15px;background:var(--bg);border-color:var(--border);padding:16px;}
+.stat-value{font-size:28px;letter-spacing:-.7px;}
+.quick-deck{padding:15px 0;}
+.quick-deck strong{font-size:13px;}
+.quick-deck .btn{white-space:nowrap;}
+table{font-size:13px;}
+td,th{padding:10px 12px;border-color:var(--border);}
+th{background:var(--bg);}
+.toast{border-radius:14px;padding:13px 17px;}
+.modal{border-radius:22px;padding:24px;}
+.modal input{margin-top:16px;}
+.modal-actions .btn{min-width:90px;}
+.empty-illustration{border:1px dashed rgba(109,92,232,.38);background:var(--accent-soft);}
+.empty-illustration .ei-card,.empty-illustration .ei-spark{color:var(--accent);}
+.empty-state h3{font-size:20px;letter-spacing:-.4px;}
+.empty-state p{font-size:13px;line-height:1.6;}
+#tab-ai>.card,#tab-import>.card{max-width:920px;margin-left:auto;margin-right:auto;}
+#tab-decks>.card{max-width:1120px;margin-left:auto;margin-right:auto;}
+/* Main study dashboard */
+.study-dashboard{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(290px,.85fr);gap:18px;align-items:start;}
+.study-main-column,.study-side-column{display:flex;flex-direction:column;gap:18px;min-width:0;}
+.study-main-column>.card,.study-side-column>.card{min-width:0;}
+.study-side-column .panel-title{font-size:16px;}
+.study-side-column .card{padding:20px;}
+.home-study-card{background:linear-gradient(145deg,var(--panel) 70%,var(--accent-soft));}
+.streak-card{position:relative;overflow:hidden;background:linear-gradient(145deg,#fff7ee 0%,#fff 72%);border-color:#f4ddc9;box-shadow:0 12px 30px rgba(171,93,42,.07);}
+:root[data-theme="dark"] .streak-card{background:linear-gradient(145deg,#35251f,#191c29 75%);border-color:#5c3d34;}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .streak-card{background:linear-gradient(145deg,#35251f,#191c29 75%);border-color:#5c3d34;}}
+.streak-card:after{content:"";position:absolute;top:-48px;right:-36px;width:150px;height:150px;border-radius:50%;background:rgba(255,161,88,.11);pointer-events:none;}
+.streak-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:relative;z-index:1;}
+.streak-eyebrow{font-size:10px;font-weight:900;letter-spacing:.14em;color:#b66b37;text-transform:uppercase;}
+.streak-title{font-size:16px;letter-spacing:-.35px;font-weight:800;margin-top:3px;}
+.streak-number{display:flex;align-items:center;gap:7px;font-size:12px;color:#a55220;font-weight:700;white-space:nowrap;}
+.streak-number strong{font-size:28px;line-height:1;letter-spacing:-1px;color:#a94718;}
+.streak-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin-top:20px;position:relative;z-index:1;}
+.streak-day{display:flex;align-items:center;flex-direction:column;gap:7px;min-width:0;color:#8e7766;font-size:10px;font-weight:800;}
+.streak-dot{width:30px;height:30px;border:1px solid #f0d5c0;border-radius:11px;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;color:transparent;font-size:14px;transition:transform .15s ease,background .15s ease;}
+.streak-day.is-done .streak-dot{background:#f58a42;border-color:#e67830;color:white;box-shadow:0 4px 9px rgba(232,119,48,.18);}
+.streak-day.is-today .streak-dot{outline:2px solid #ed9c65;outline-offset:2px;}
+.streak-day.is-today{color:#a55220;}
+.streak-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid #f2e2d6;position:relative;z-index:1;}
+.streak-message{font-size:11px;line-height:1.5;color:#936e56;}
+.streak-best{display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:10px;color:#936e56;white-space:nowrap;}
+.streak-best strong{font-size:14px;color:#a55220;}
+.streak-target{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--sub);margin-top:12px;}
+.streak-target .target-dot{width:7px;height:7px;border-radius:50%;background:#f58a42;}
+.dashboard-grid{gap:12px;margin:20px 0;}
+@media(max-width:840px){
+  header{grid-template-columns:auto minmax(0,1fr) auto;gap:12px;padding:10px 14px;}
+  nav{overflow-x:auto;justify-content:flex-start;}
+  nav button{padding:9px 10px;}
+  main{padding:22px 14px 70px;}
+  .study-dashboard{grid-template-columns:minmax(0,1fr);}
+  .study-side-column{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}
+  .study-side-column .streak-card{grid-column:1/-1;}
+}
+@media(max-width:600px){
+  header{grid-template-columns:1fr auto;gap:8px;padding:10px 12px;}
+  .brand{grid-column:1;grid-row:1;}
+  .header-actions{grid-column:2;grid-row:1;}
+  nav{grid-column:1/-1;grid-row:2;width:100%;border-top:1px solid var(--border);padding-top:8px;}
+  nav button{font-size:12px;min-height:38px;padding:7px 10px;}
+  .header-streak{padding:7px 9px;gap:4px;font-size:10px;}
+  .header-streak strong{font-size:12px;}
+  main{padding:16px 10px 60px;}
+  .card{padding:17px;border-radius:17px;}
+  .study-dashboard,.study-main-column,.study-side-column{gap:12px;}
+  .study-side-column{display:flex;}
+  .panel-title{font-size:18px;}
+  .study-card{min-height:245px;padding:28px 18px;}
+  .grade-row{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .count-fields{gap:8px;}
+  .type-toggle.count-toggle{gap:3px;}
+  .type-toggle.count-toggle button{padding:8px 4px;font-size:12px;}
+  .streak-week{gap:4px;}
+  .streak-dot{width:28px;height:28px;border-radius:9px;}
+  .streak-footer{align-items:flex-start;}
+  .deck-filter{flex-wrap:wrap;}
+  .dropzone{flex-wrap:wrap;}
+}
+
 </style>
 </head>
 <body>
@@ -223,6 +390,7 @@ input.invalid{border-color:var(--danger);}
     <button data-tab="ai"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c.4 3.2 1.1 5.6 2.2 7.1 1.1 1.5 2.7 2.5 4.8 3.2-2.1.7-3.7 1.7-4.8 3.2-1.1 1.5-1.8 3.9-2.2 7.1-.4-3.2-1.1-5.6-2.2-7.1-1.1-1.5-2.7-2.5-4.8-3.2 2.1-.7 3.7-1.7 4.8-3.2 1.1-1.5 1.8-3.9 2.2-7.1Z"/></svg>AI Create</button>
   </nav>
   <div class="header-actions">
+    <div class="header-streak" id="headerStreak" title="Your current study streak"><span aria-hidden="true">🔥</span><strong id="headerStreakCount">0</strong><span>day streak</span></div>
     <button class="icon-btn" id="themeToggle" type="button" title="Toggle theme" aria-label="Toggle theme">
       <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
     </button>
@@ -424,44 +592,48 @@ function renderStudy(){
   const decks=Object.values(state.decks);
   if(!studySession){
     if(!decks.length){
-      el.innerHTML=`<div class="card">${panelHeader('card','Study','Pick a deck to start a spaced-repetition session.')}
+      el.innerHTML=`<div class="card">${panelHeader('card','Study','Build a small daily habit with your first flashcard deck.')}
         <div class="empty-state"><div class="empty-illustration"><span class="ei-card">${ICONS.card}</span><span class="ei-spark a">${ICONS.sparkle}</span><span class="ei-spark b">${ICONS.sparkle}</span></div>
-        <h3>No decks yet</h3><p>Create your first deck to start studying, or let AI generate one for you.</p>
-        <div class="empty-actions"><button class="btn" id="emptyCreateDeck">${ICONS.plus} Create deck</button><button class="btn secondary" id="emptyCreateAI">${ICONS.sparkle} Create with AI</button></div></div></div>`;
+        <h3>Your next study streak starts here</h3><p>Create a deck or let AI turn your notes into cards. Your daily streak will track your practice automatically.</p>
+        <div class="empty-actions"><button class="btn" id="emptyCreateDeck">${ICONS.plus} Create deck</button><button class="btn secondary" id="emptyCreateAI">${ICONS.sparkle} Create with AI</button></div></div></div>
+        ${streakOverviewHtml()}`;
       document.getElementById('emptyCreateDeck').onclick=()=>switchTab('decks');
       document.getElementById('emptyCreateAI').onclick=()=>switchTab('ai');
       return;
     }
     const dueTotal=decks.reduce((n,d)=>n+dueCards(d).length,0);
-    const streakN=currentStreakCount();
     const showStudyAll=decks.length>1 && dueTotal>0;
     const sets=Object.values(state.sets||{}).map(s=>({...s, deckIds:setDeckIds(s)})).filter(s=>s.deckIds.length);
     const batchOptions=[10,20,30,50];
-    el.innerHTML=`<div class="card">${panelHeader('card','Study','Choose where to focus, then let Recall handle the scheduling.')}
-      ${streakN>0?`<p class="sub" style="margin:-4px 0 14px;">🔥 <strong>${streakN}-day streak</strong> — keep it going today.</p>`:''}
-      ${showStudyAll?`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:16px;">
-        <div><strong>${dueTotal} card${dueTotal===1?'':'s'} due</strong><div class="sub">Across ${decks.length} decks</div></div>
-        <button class="btn" id="studyAllBtn">${ICONS.sparkle} Study everything due</button>
-      </div>`:''}
-      <div class="row" style="align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:2px;">
-        <div style="flex:1;min-width:180px;"><label>Deck</label>
-          <select id="studyDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} · ${dueCards(d).length} due · ${d.cards.length} total</option>`).join('')}</select></div>
-        <div style="width:auto;"><label>Session size</label>
-          <select id="batchSizeSel" style="min-width:130px;"><option value="">All due cards</option>${batchOptions.map(n=>`<option value="${n}">${n} cards</option>`).join('')}</select></div>
-      </div>
-      <div class="row" style="margin-top:2px;align-items:center;"><button class="btn ${showStudyAll?'secondary':''}" id="startStudyBtn">${ICONS.card} Start studying this deck</button>
-      <label style="margin:0;display:flex;align-items:center;gap:7px;"><input type="checkbox" id="allCardsChk" style="width:auto;min-height:0;"> Include not-yet-due cards</label></div>
-      <p class="sub" style="margin:10px 0 0;">Tip: use <span class="kbd">Space</span> to reveal cards and <span class="kbd">1–4</span> to grade them. Studying in smaller batches (say, 20 at a time) is easier to stick with than one big session.</p>
-      ${sets.length?`<div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);">
-        <label>Or study a set</label>
-        <div class="row" style="align-items:center;gap:10px;">
-          <select id="studySetSel" style="flex:1;">${sets.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} · ${dueCountForDeckIds(s.deckIds)} due · ${s.deckIds.length} decks</option>`).join('')}</select>
-          <button class="btn secondary" id="startSetStudyBtn" style="flex:none;">${ICONS.card} Start</button>
+    el.innerHTML=`<div class="study-dashboard">
+      <div class="study-main-column">
+        <div class="card home-study-card">${panelHeader('card','Study','A little practice every day adds up. Choose a deck and Recall will schedule your next reviews.')}
+          ${showStudyAll?`<div class="row study-all-callout" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:13px;padding:14px 15px;margin-bottom:17px;">
+            <div><strong>${dueTotal} card${dueTotal===1?'':'s'} due</strong><div class="sub">Across ${decks.length} decks</div></div>
+            <button class="btn" id="studyAllBtn">${ICONS.sparkle} Study everything due</button>
+          </div>`:''}
+          <div class="row" style="align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:2px;">
+            <div style="flex:1;min-width:180px;"><label>Choose a deck</label>
+              <select id="studyDeckSel">${decks.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} · ${dueCards(d).length} due · ${d.cards.length} total</option>`).join('')}</select></div>
+            <div style="width:auto;min-width:140px;"><label>Session size</label>
+              <select id="batchSizeSel"><option value="">All due cards</option>${batchOptions.map(n=>`<option value="${n}">${n} cards</option>`).join('')}</select></div>
+          </div>
+          <div class="row" style="margin-top:12px;align-items:center;"><button class="btn" id="startStudyBtn">${ICONS.card} Start studying</button>
+          <label style="margin:0;display:flex;align-items:center;gap:7px;font-size:12px;"><input type="checkbox" id="allCardsChk" style="width:auto;min-height:0;"> Include not-yet-due cards</label></div>
+          <div class="import-tip" style="margin-top:17px;"><strong>Study tip</strong><div class="sub" style="margin-top:3px;">Use <span class="kbd">Space</span> to reveal a card and <span class="kbd">1–4</span> to rate your answer. Short sessions are easier to make a habit.</div></div>
+          ${sets.length?`<div style="margin-top:19px;padding-top:17px;border-top:1px solid var(--border);">
+            <label>Study a whole set</label><div class="row" style="align-items:center;gap:10px;"><select id="studySetSel" style="flex:1;">${sets.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} · ${dueCountForDeckIds(s.deckIds)} due · ${s.deckIds.length} decks</option>`).join('')}</select><button class="btn secondary" id="startSetStudyBtn" style="flex:none;">${ICONS.card} Start set</button></div>
+          </div>`:''}
         </div>
-      </div>`:''}
       </div>
-      <div class="card"><div class="panel-title" style="margin-bottom:8px;">Up next</div>${decks.map(d=>`<div class="quick-deck"><div><strong>${escapeHtml(d.name)}</strong><div class="sub">${dueCards(d).length} due · ${d.cards.length} cards</div></div><button class="btn secondary" data-quick-study="${d.id}">${ICONS.card} Study</button></div>`).join('')}</div>
-      ${sets.length?`<div class="card"><div class="panel-title" style="margin-bottom:8px;">Your sets</div>${sets.map(s=>`<div class="quick-deck"><div><strong>${escapeHtml(s.name)}</strong><div class="sub">${dueCountForDeckIds(s.deckIds)} due · ${s.deckIds.length} decks · ${cardCountForDeckIds(s.deckIds)} cards</div></div><button class="btn secondary" data-quick-study-set="${s.id}">${ICONS.card} Study</button></div>`).join('')}</div>`:''}`;
+      <aside class="study-side-column">
+        ${streakOverviewHtml()}
+        <div class="card"><div class="row" style="align-items:center;margin-bottom:4px;"><div><div class="panel-title">Up next</div><div class="sub">Pick up where you left off</div></div><span class="chip">${dueTotal} due</span></div>
+          ${decks.map(d=>`<div class="quick-deck"><div style="min-width:0;"><strong>${escapeHtml(d.name)}</strong><div class="sub">${dueCards(d).length} due · ${d.cards.length} cards</div></div><button class="btn secondary" data-quick-study="${d.id}">${ICONS.card} Study</button></div>`).join('')}
+        </div>
+        ${sets.length?`<div class="card"><div class="panel-title" style="margin-bottom:7px;">Your sets</div><div class="sub">Organized collections across decks</div>${sets.map(s=>`<div class="quick-deck"><div style="min-width:0;"><strong>${escapeHtml(s.name)}</strong><div class="sub">${dueCountForDeckIds(s.deckIds)} due · ${s.deckIds.length} decks · ${cardCountForDeckIds(s.deckIds)} cards</div></div><button class="btn secondary" data-quick-study-set="${s.id}">${ICONS.card} Study</button></div>`).join('')}</div>`:''}
+      </aside>
+    </div>`;
     const currentBatchSize=()=>{ const v=document.getElementById('batchSizeSel').value; return v?parseInt(v,10):null; };
     document.getElementById('startStudyBtn').onclick=()=>{
       const deckId=document.getElementById('studyDeckSel').value, all=document.getElementById('allCardsChk').checked;
@@ -513,20 +685,62 @@ function undoLastGrade(){
 }
 function pad2(n){ return String(n).padStart(2,'0'); }
 function dayStr(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function ensureStreakState(){
+  if(!state.streak || typeof state.streak!=='object') state.streak={count:0,lastDay:null,best:0,days:[],reviewsByDay:{}};
+  const st=state.streak;
+  if(!Array.isArray(st.days)) st.days=[];
+  if(!st.reviewsByDay || typeof st.reviewsByDay!=='object') st.reviewsByDay={};
+  st.count=Number(st.count)||0;
+  st.best=Math.max(Number(st.best)||0,st.count);
+  // Migrate the earlier single-date streak format without losing its latest day.
+  if(st.lastDay && !st.days.includes(st.lastDay)) st.days.push(st.lastDay);
+  return st;
+}
 function bumpStreak(){
-  const today=dayStr(new Date());
-  if(!state.streak) state.streak={count:0,lastDay:null};
-  if(state.streak.lastDay===today) return;
-  const y=new Date(); y.setDate(y.getDate()-1);
-  state.streak.count = state.streak.lastDay===dayStr(y) ? (state.streak.count||0)+1 : 1;
-  state.streak.lastDay=today;
+  const today=dayStr(new Date()), st=ensureStreakState();
+  if(st.lastDay!==today){
+    const y=new Date(); y.setDate(y.getDate()-1);
+    st.count=st.lastDay===dayStr(y) ? (st.count||0)+1 : 1;
+    st.lastDay=today;
+  }
+  if(!st.days.includes(today)) st.days.push(today);
+  st.days=Array.from(new Set(st.days)).sort().slice(-400);
+  st.reviewsByDay[today]=(Number(st.reviewsByDay[today])||0)+1;
+  const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-400); const cutoffDay=dayStr(cutoff);
+  Object.keys(st.reviewsByDay).forEach(day=>{if(day<cutoffDay) delete st.reviewsByDay[day];});
+  st.best=Math.max(Number(st.best)||0,Number(st.count)||0);
   saveDecks();
+  updateHeaderStreak();
 }
 function currentStreakCount(){
-  if(!state.streak || !state.streak.lastDay) return 0;
-  const today=dayStr(new Date());
-  const y=new Date(); y.setDate(y.getDate()-1);
-  return (state.streak.lastDay===today || state.streak.lastDay===dayStr(y)) ? (state.streak.count||0) : 0;
+  const st=ensureStreakState(); if(!st.lastDay) return 0;
+  const today=dayStr(new Date()), y=new Date(); y.setDate(y.getDate()-1);
+  return (st.lastDay===today || st.lastDay===dayStr(y)) ? (Number(st.count)||0) : 0;
+}
+function updateHeaderStreak(){
+  const countEl=document.getElementById('headerStreakCount');
+  const pill=document.getElementById('headerStreak');
+  if(!countEl||!pill) return;
+  const count=currentStreakCount(); countEl.textContent=count;
+  pill.title=`${count}-day current streak. Best: ${ensureStreakState().best} days.`;
+  pill.setAttribute('aria-label',`${count} day study streak`);
+}
+function streakOverviewHtml(){
+  const st=ensureStreakState(), today=new Date(), todayKey=dayStr(today), current=currentStreakCount();
+  const done=new Set(st.days||[]), todayReviews=Number((st.reviewsByDay||{})[todayKey])||0;
+  const week=Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(today.getDate()-(6-i));return d;});
+  const weekHtml=week.map(d=>{
+    const key=dayStr(d), active=done.has(key), isToday=key===todayKey;
+    const label=d.toLocaleDateString(undefined,{weekday:'short'}).slice(0,2);
+    return `<div class="streak-day ${active?'is-done':''} ${isToday?'is-today':''}" title="${key}${active?` · ${(Number((st.reviewsByDay||{})[key])||0)} review(s)`:''}"><span>${label}</span><span class="streak-dot">${active?'✓':(isToday?'·':'')}</span></div>`;
+  }).join('');
+  const message=todayReviews>0?`Nice work — ${todayReviews} review${todayReviews===1?'':'s'} logged today. Streak secured!`:current>0&&st.lastDay===todayKey?'You studied today. Come back tomorrow to keep the chain alive.':'Study at least one card today to keep your streak going.';
+  return `<section class="card streak-card" aria-label="Study streak">
+    <div class="streak-head"><div><div class="streak-eyebrow">Your momentum</div><div class="streak-title">Build your daily habit</div></div><div class="streak-number"><span aria-hidden="true">🔥</span><strong>${current}</strong><span>day streak</span></div></div>
+    <div class="streak-week" aria-label="Study activity over the last seven days">${weekHtml}</div>
+    <div class="streak-footer"><div class="streak-message">${message}</div><div class="streak-best"><span>PERSONAL BEST</span><strong>🏆 ${Math.max(Number(st.best)||0,Number(st.count)||0)} days</strong></div></div>
+    <div class="streak-target"><span class="target-dot"></span>${todayReviews>0?'Daily goal complete':'Daily goal: review one or more cards'}</div>
+  </section>`;
 }
 function studyTopHtml(deck){
   const progress=(studySession.pos/studySession.queue.length)*100;
@@ -1096,28 +1310,66 @@ function splitCsvLine(line){
 
 // ---------- AI CREATE ----------
 async function extractPdfText(file){
+  if(!window.pdfjsLib) throw new Error('PDF reader did not load. Check your connection and try again.');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   const buf = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({data:buf}).promise;
   let text='';
   for(let p=1;p<=pdf.numPages;p++){
     const page=await pdf.getPage(p);
     const content=await page.getTextContent();
-    text += content.items.map(i=>i.str).join(' ') + '\n';
+    let line='', lastY=null;
+    for(const it of content.items){
+      const y=it.transform ? it.transform[5] : null;
+      if(lastY!==null && y!==null && Math.abs(y-lastY)>2 && line){ text+=line.trim()+'\n'; line=''; }
+      line += it.str + (it.hasEOL ? '\n' : ' ');
+      if(it.hasEOL){ text+=line.replace(/\s+$/,'')+'\n'; line=''; }
+      if(y!==null) lastY=y;
+    }
+    text += line.trim() + '\n';
   }
   return text;
+}
+async function extractDocxText(file){
+  if(!window.mammoth) throw new Error('DOCX reader did not load. Check your connection and try again.');
+  const result=await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});
+  return String(result.value||'').trim();
 }
 function readAsText(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsText(file); }); }
 function readAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
 
 // ---------- AI generation helpers ----------
 const GEN_SYSTEM = 'You are a flashcard generator that only outputs valid JSON. Never write sentences, greetings, questions, or explanations outside the JSON.';
-const TOPIC_RULE = 'If the material is only a topic, a title, or a short request (not full notes), do NOT ask for more material and do NOT reply with prose — use your own knowledge of that topic to write accurate cards. Your entire reply must be the JSON object and nothing else. Always make sure to generate the exact number of flashcards the user asks for.';
+const TOPIC_RULE = 'Make each card test a distinct learning objective; vary definitions, mechanisms, examples, applications, causes, effects, comparisons, exceptions, and implications when supported. Never pad with meaningless wording changes or present uncertain claims as facts. Output only the requested JSON object.';
 function genError(kind, message){ const e=new Error(message||kind); e.kind=kind; return e; }
 
 // ---- Card-count settings ----
-// MAX_CARDS caps what can be requested; BATCH_CARDS is the most we ask the AI for in one go
-// (long lists get cut off or sloppy), so bigger targets are built up over several requests.
-const MIN_CARDS=1, MAX_CARDS=1000, BATCH_CARDS=50, MAX_ROUNDS=100;
+// Larger but bounded batches reduce request overhead. MCQ cards have longer outputs.
+const MIN_CARDS=1, MAX_CARDS=1000, BATCH_BASIC=40, BATCH_MCQ=25, BATCH_FITB=35;
+function batchSizeFor(type){ return type==='mcq' ? BATCH_MCQ : type==='fitb' ? BATCH_FITB : BATCH_BASIC; }
+function splitSourceIntoChunks(text, maxChars=9000){
+  const source=String(text||'').replace(/\r/g,'').trim();
+  if(!source) return [];
+  if(source.length<=maxChars) return [source];
+  const chunks=[]; let current='';
+  const paragraphs=source.split(/\n{2,}/);
+  const pushPiece=(piece)=>{
+    let rest=piece.trim();
+    if(!rest) return;
+    if(rest.length>maxChars && current){ chunks.push(current); current=''; }
+    while(rest.length>maxChars){
+      let cut=rest.lastIndexOf(' ',maxChars);
+      if(cut<Math.floor(maxChars*0.6)) cut=maxChars;
+      chunks.push(rest.slice(0,cut).trim()); rest=rest.slice(cut).trim();
+    }
+    if(!rest) return;
+    if(current && current.length+rest.length+2>maxChars){ chunks.push(current); current=''; }
+    current += (current?'\n\n':'')+rest;
+  };
+  for(const paragraph of paragraphs) pushPiece(paragraph);
+  if(current) chunks.push(current);
+  return chunks.filter(Boolean);
+}
 const cardWord=k=>`${k} card${k===1?'':'s'}`;
 // Reads and validates the "Number of cards" controls -> {mode, min, max} or {mode, error, bad:[ids]}
 function readCountSetting(){
@@ -1142,12 +1394,18 @@ function describeCount(s){
   return `The AI will make between ${s.min} and ${cardWord(s.max)}, depending on how much your material covers.`;
 }
 // The sentence dropped into the prompt that tells the AI how many to write.
-function countInstruction(noun, lo, hi){
-  if(lo===hi) return `Write EXACTLY ${lo} ${noun}${lo===1?'':'s'} — no more and no fewer. If the material has fewer distinct facts than that, cover the wider topic using your own knowledge instead of repeating yourself or padding with trivial ${noun}s.`;
-  return `Write between ${lo} and ${hi} ${noun}s (inclusive) — never fewer than ${lo} and never more than ${hi}. Pick the number within that range based on how much distinct, testable content there is; if the material is thin, cover the wider topic with your own knowledge rather than repeating yourself or padding with trivial ${noun}s.`;
+function countInstruction(noun, lo, hi, allowExpansion=false){
+  if(allowExpansion){
+    if(lo===hi) return `Aim for EXACTLY ${lo} ${noun}${lo===1?'':'s'}. Use accurate, well-established related subject knowledge if the supplied material alone is too limited. Do not repeat or pad with trivial ${noun}s.`;
+    return `Write up to ${hi} ${noun}s and try to reach at least ${lo}. You may use accurate, well-established related subject knowledge if the material is too limited; never repeat or pad with trivial ${noun}s.`;
+  }
+  if(lo===hi) return `Aim for ${lo} ${noun}${lo===1?'':'s'}, but source fidelity is more important than the count: use ONLY facts explicitly supported by the supplied material. If there are not ${lo} distinct supported items, return only the distinct supported items. Never guess, add outside facts, or disguise repetition as a new card.`;
+  return `Write up to ${hi} ${noun}s, aiming for at least ${lo}, using ONLY facts explicitly supported by the supplied material. Source fidelity is more important than the count. If fewer distinct supported items exist, return only those; never guess, add outside facts, or disguise repetition as a new card.`;
 }
-function autoCountInstruction(noun){
-  return `Decide the number of ${noun}s yourself based on how much distinct, testable content is present (do not pad with trivial or repetitive ${noun}s).`;
+function autoCountInstruction(noun, allowExpansion=false){
+  return allowExpansion
+    ? `Decide a sensible number of distinct, useful ${noun}s from the supplied material and accurate related subject knowledge. Never pad with repetition.`
+    : `Create as many distinct, useful ${noun}s as the supplied material explicitly supports. Do not use outside knowledge or guess; never pad with repetition.`;
 }
 function findBalanced(t, start){
   const open=t[start], close=open==='['?']':'}';
@@ -1184,17 +1442,26 @@ function parseCardsJson(raw){
     r=unwrapCards(tryParse(t.slice(i,end+1)));
     if(r && r.length) return r;
   }
-  return null;
+  // truncated reply: keep every complete card object that was written before the cut-off
+  const salvaged=[];
+  for(let i=0;i<t.length;i++){
+    if(t[i]!=='{') continue;
+    const end=findBalanced(t,i); if(end<0) continue;
+    const o=tryParse(t.slice(i,end+1));
+    if(o && typeof o==='object' && !Array.isArray(o) && ('front' in o || 'question' in o)){ salvaged.push(o); i=end; }
+  }
+  return salvaged.length ? salvaged : null;
 }
-async function requestCards(model, promptText, images){
+async function requestCards(model, promptText, images, tokenBudget=4000){
   const userContent = images.length
     ? [{type:'text', text:promptText}, ...images.map(u=>({type:'image_url', image_url:{url:u}}))]
     : promptText;
   let messages=[{role:'system', content:GEN_SYSTEM},{role:'user', content:userContent}];
   let jsonMode = images.length===0;   // JSON mode is only used for text-only requests
   let lastRaw='';
-  for(let attempt=0; attempt<3; attempt++){
-    const body={ model, messages, temperature: attempt ? 0.2 : 0.4 };
+  const maxTok=fitBudget(promptText, tokenBudget);
+  for(let attempt=0; attempt<2; attempt++){
+    const body={ model, messages, temperature:0.2, max_completion_tokens:maxTok, ...(model==='openai/gpt-oss-20b'||model==='openai/gpt-oss-120b' ? {reasoning_effort:'low',include_reasoning:false} : {}) };
     if(jsonMode) body.response_format={type:'json_object'};
     const resp = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await resp.json().catch(()=>({}));
@@ -1202,7 +1469,19 @@ async function requestCards(model, promptText, images){
       // Model/endpoint rejected JSON mode (or its JSON check) -> retry without it.
       if(resp.status===400 && jsonMode){ jsonMode=false; continue; }
       const msg = typeof data.error==='string' ? data.error : (data.error && data.error.message) || ('API error '+resp.status);
-      throw genError('api', msg);
+      const detail = (data.details && (data.details.error && data.details.error.message || data.details.error)) || '';
+      const err=genError('api', msg); err.status=resp.status;
+      err.retryAfterMs=parseRetryMs(resp.headers.get('retry-after') ?? data.retry_after_seconds, msg+' '+(typeof detail==='string'?detail:JSON.stringify(detail)));
+      err.retryable=resp.status===429 || resp.status>=500;
+      if(resp.status===429 && err.retryAfterMs>120000){
+        // a daily limit, not a per-minute one: waiting inside the page is pointless
+        err.retryable=false; err.kind='limit';
+        err.message=`the Groq usage limit was reached (it resets in about ${Math.ceil(err.retryAfterMs/60000)} min). Your cards so far are kept; run again later, or use a paid/other-organization key`;
+      } else if(resp.status===413){
+        err.retryable=false; err.kind='limit';
+        err.message='a request was larger than your Groq per-minute token limit. Try a smaller card count or a paid Groq tier';
+      }
+      throw err;
     }
     lastRaw = data.choices?.[0]?.message?.content || '';
     const parsed = parseCardsJson(lastRaw);
@@ -1217,13 +1496,427 @@ async function requestCards(model, promptText, images){
   }
   throw genError('parse', 'The AI kept replying with text instead of cards.');
 }
+async function extractImageSourceOnce(images){
+  const messages=[
+    {role:'system',content:'Extract source content faithfully. Do not use outside knowledge or guess. Mark illegible text as [unclear].'},
+    {role:'user',content:[
+      {type:'text',text:'Read the attached study image(s) once and return compact source notes only. Transcribe visible words, labels, numbers, relationships in diagrams, and explicit chart values. Preserve uncertainty; do not infer missing facts or add background explanations.'},
+      ...images.map(url=>({type:'image_url',image_url:{url}}))
+    ]}
+  ];
+  const resp=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:VISION_MODEL,messages,temperature:0,max_completion_tokens:2500})});
+  const data=await resp.json().catch(()=>({}));
+  if(!resp.ok){
+    const msg=typeof data.error==='string'?data.error:(data.error&&data.error.message)||('Image extraction API error '+resp.status);
+    const err=genError('api',msg); err.status=resp.status; err.retryable=resp.status===429||resp.status>=500; throw err;
+  }
+  const content=String(data.choices?.[0]?.message?.content||'').trim();
+  if(!content) throw genError('parse','The image reader did not return readable content.');
+  return content;
+}
+
+// ---------- Smart generation engine ----------
+// Term lists (e.g. 1,000 vocabulary words) are split into numbered batches where every term is
+// assigned to exactly one request, so cards cannot repeat by construction. Anything the model
+// skips is detected and re-requested. Prose sources are split into sections with per-section quotas.
+const normKey=v=>String(v||'').normalize('NFKC').toLowerCase().replace(/[^a-z0-9\u00C0-\u024F\u4E00-\u9FFF]+/gi,' ').trim();
+const termKeyOf=t=>normKey(String(t||'').replace(/\([^)]*\)/g,' ').replace(/\s+(?:n|v|adj|adv)\.?\s*$/i,''));
+const dedupeTokens=k=>k.split(' ').filter(w=>w.length>2 || /\d/.test(w));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const estTokens=s=>Math.ceil(String(s||'').length/3.6);
+function shuffled(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+// Groq counts prompt + max output against the per-minute limit, so keep the two together under ~7.6k.
+function fitBudget(promptText, desired){
+  const room=7600-(estTokens(promptText)+150);
+  return Math.max(800, Math.min(8192, desired, room));
+}
+function parseRetryMs(headerVal, message){
+  const h=parseFloat(headerVal);
+  if(Number.isFinite(h) && h>=0) return Math.ceil(h*1000);
+  const m=/try again in\s+((?:\d+(?:\.\d+)?\s*(?:ms|h|m|s)\s*)+)/i.exec(String(message||''));
+  if(!m) return 0;
+  let total=0, x; const re=/(\d+(?:\.\d+)?)\s*(ms|h|m|s)/gi;
+  while((x=re.exec(m[1]))){ const v=parseFloat(x[1]), u=x[2].toLowerCase(); total+= u==='h'?v*3600000 : u==='m'?v*60000 : u==='s'?v*1000 : v; }
+  return Math.ceil(total);
+}
+
+// ---- rate-limit aware requests ----
+let rlUntil=0;   // shared "do not send before" timestamp after a 429
+async function requestWithBackoff(model, promptText, images, budget, shouldStop, pace){
+  let delay=2500;
+  for(let attempt=0; attempt<5; attempt++){
+    if(shouldStop && shouldStop()) throw genError('stopped','Stopped');
+    const wait=rlUntil-Date.now(); if(wait>0) await sleep(wait);
+    try{ return await requestCards(model, promptText, images, budget); }
+    catch(err){
+      const retryable = err.retryable===true || !err.kind;   // 429 / 5xx / network errors
+      if(!retryable || attempt===4) throw err;
+      if(err.status===429 && pace) pace.limit=1;               // free-tier limits: stop running in parallel
+      const waitMs=Math.min(60000, err.retryAfterMs || delay) + Math.random()*400;
+      rlUntil=Math.max(rlUntil, Date.now()+waitMs);
+      delay=Math.min(30000, delay*2);
+    }
+  }
+}
+// Runs async tasks with a concurrency limit that can shrink while running (pace.limit).
+async function runPool(tasks, pace, halt){
+  let next=0;
+  const worker=async idx=>{
+    while(true){
+      if(halt()) return;
+      if(idx>=pace.limit) return;
+      const i=next++; if(i>=tasks.length) return;
+      await tasks[i]();
+    }
+  };
+  await Promise.all(Array.from({length:Math.min(pace.limit,tasks.length)},(_,i)=>worker(i)));
+  // if the limit shrank mid-run, worker 0 has already drained the queue
+}
+
+// ---- normalising model output into cards ----
+function normalizeCards(cardType, parsed){
+  const arr=Array.isArray(parsed) ? parsed : [];
+  const term=c=>c && c.term!=null ? String(c.term).trim() : '';
+  if(cardType==='mcq'){
+    return arr.map(c=>{
+      if(!c || typeof c!=='object') return null;
+      let options=Array.isArray(c.options) ? c.options.map(o=>String(o).trim()).filter(Boolean) : [];
+      if(options.length===4 && options.every((o,i)=>new RegExp('^\\(?'+'ABCD'[i]+'[.)]\\s','i').test(o))) options=options.map(o=>o.replace(/^\(?[A-Da-d][.)]\s+/,''));
+      if(options.length!==4 || new Set(options.map(o=>o.toLowerCase())).size!==4) return null;
+      const ans=String(c.answer||'').trim();
+      let ci=options.findIndex(o=>o.toLowerCase()===ans.toLowerCase());
+      if(ci<0){ const stripped=ans.replace(/^\(?[A-Da-d][.)]\s*/,'').toLowerCase(); ci=options.findIndex(o=>o.toLowerCase()===stripped); }
+      if(ci<0 && /^[A-Da-d]$/.test(ans)) ci='abcd'.indexOf(ans.toLowerCase());
+      if(ci<0) return null;
+      let opts=options, idx=ci;
+      // models like to put the right answer in the same slot; shuffle unless options refer to each other
+      if(!options.some(o=>/\b(all|none|both)\b.*\b(above|these|options)\b/i.test(o))){ const order=shuffled([0,1,2,3]); opts=order.map(i=>options[i]); idx=order.indexOf(ci); }
+      const front=String(c.question||'').trim();
+      return front ? { type:'mcq', front, options:opts, correctIndex:idx, term:term(c) } : null;
+    }).filter(Boolean);
+  }
+  if(cardType==='fitb'){
+    return arr.map(c=>{
+      if(!c || typeof c!=='object') return null;
+      const front=String(c.question||'').replace(/\[\s*(?:blank)?\s*\]|\(\s*blank\s*\)|\.{4,}|…{2,}/gi,'___').trim();
+      const answers=Array.isArray(c.answers) ? c.answers.map(a=>String(a).trim()).filter(Boolean) : (c.answer ? [String(c.answer).trim()] : []);
+      return front && /_{2,}/.test(front) && answers.length ? { type:'fitb', front, answers, term:term(c) } : null;
+    }).filter(Boolean);
+  }
+  return arr.map(c=>{
+    if(!c || typeof c!=='object') return null;
+    const front=String(c.front||'').trim(), back=String(c.back||'').trim();
+    return front && back ? { type:'basic', front, back, term:term(c) } : null;
+  }).filter(Boolean);
+}
+
+// ---- duplicate removal ----
+// existing = {keys:Set<string>, toks:Array<Set<string>>}. Exact normalised-front match always counts;
+// near-duplicate (word overlap >= 85%) is checked for free-form cards but not for term-list cards.
+function dedupeCards(list, existing){
+  const seen=new Set(existing ? existing.keys : []);
+  const toks=existing ? existing.toks.slice() : [];
+  const out=[];
+  for(const c of list){
+    const fk=normKey(c.front);
+    if(!fk || seen.has(fk)) continue;
+    let tk=null;
+    if(!c.key){
+      tk=new Set(dedupeTokens(fk));
+      if(tk.size>=4){
+        let dup=false;
+        for(const t of toks){
+          if(t.size<4) continue;
+          let inter=0; for(const w of tk) if(t.has(w)) inter++;
+          if(inter/(tk.size+t.size-inter)>=0.85){ dup=true; break; }
+        }
+        if(dup) continue;
+      }
+    }
+    seen.add(fk); if(tk && tk.size>=4) toks.push(tk);
+    out.push(c);
+  }
+  return out;
+}
+
+// ---- term-list detection ----
+function splitTermLine(raw){
+  let s=String(raw||'').trim();
+  s=s.replace(/^(?:[-*•·▪◦►]+\s+|\(?\d{1,4}[.):]\s+|\(?[a-zA-Z][.)]\s+)/,'');
+  if(!s) return null;
+  let term=s, def='', m;
+  const tab=s.indexOf('\t');
+  if(tab>0){ term=s.slice(0,tab); def=s.slice(tab+1); }
+  else if(s[0]==='"' && (m=/^"([^"]*)"\s*,\s*"?([\s\S]*?)"?$/.exec(s))){ term=m[1]; def=m[2]; }
+  else if((m=/^(.{1,60}?)\s+[-–—|]\s+(.+)$/.exec(s))){ term=m[1]; def=m[2]; }
+  else if((m=/^([^:=]{1,60}?)\s*[:=]\s+(.+)$/.exec(s))){ term=m[1]; def=m[2]; }
+  else if((s.match(/,/g)||[]).length===1 && (m=/^([^,]{1,40}),\s*(.+)$/.exec(s))){ term=m[1]; def=m[2]; }
+  const clean=x=>String(x||'').replace(/^["'“”‘’]+|["'“”‘’]+$/g,'').replace(/\s+/g,' ').trim();
+  term=clean(term); def=clean(def);
+  if(!term) return null;
+  const tw=term.split(/\s+/).length;
+  if(tw>5 || term.length>60) return null;
+  if(def){ if(def.split(/\s+/).length>40) return null; }
+  else { if(tw>4) return null; if(tw>=3 && /[.?!]$/.test(term)) return null; }
+  const key=termKeyOf(term); if(!key) return null;
+  return { term, def, key };
+}
+// a title or instruction typed above/below a list ("SSAT vocabulary", "Make one question per word:")
+function looksLikeInstruction(l){
+  const wc=l.split(/\s+/).length;
+  if(/[:：]\s*$/.test(l)) return true;
+  return wc>=2 && wc<=14 && !/[-–—|=]|:\s/.test(l) &&
+    /\b(vocab(?:ulary)?|words?|list|terms?|questions?|flashcards?|cards?|quiz|make|create|generate|write|study|ssat|isee|sat|act|gre|toefl|unit|chapter|lesson|practice|each|every|per)\b/i.test(l);
+}
+function parseOneList(text){
+  const raw=String(text||'').replace(/\r/g,'').split('\n').map(l=>l.trim());
+  let lines=raw.filter(Boolean);
+  if(!lines.length) return null;
+  const context=[];
+  // a short heading block followed by a blank line and then a solid block of lines is a title, not terms
+  const bi=raw.findIndex((l,i)=>!l && raw.slice(0,i).some(Boolean));
+  if(bi>0){
+    const head=raw.slice(0,bi).filter(Boolean), nextBlock=[]; 
+    for(let i=bi+1;i<raw.length && raw[i];i++) nextBlock.push(raw[i]);
+    if(head.length<=3 && nextBlock.length>=4){ context.push(...head); lines=lines.slice(head.length); }
+  }
+  const edge=new Set([...lines.slice(0,3), ...lines.slice(-2)].filter(looksLikeInstruction));
+  let entries=null;
+  if(lines.length>=8){
+    const e=[], ctx=[];
+    for(const l of lines){ const it=edge.has(l) ? null : splitTermLine(l); if(it) e.push(it); else ctx.push(l); }
+    if(e.length>=8 && e.length>=lines.length*0.7){ entries=e; context.push(...ctx); }
+  }
+  if(!entries){
+    // one paragraph / a few lines of comma- or semicolon-separated terms
+    const segs=lines.filter(l=>!edge.has(l)).join(',').split(/[,;•·|]+/).map(x=>x.replace(/^\s*\(?\d{1,4}[.)]\s*/,'').trim()).filter(Boolean);
+    if(segs.length>=10 && segs.filter(x=>x.split(/\s+/).length<=4).length>=segs.length*0.9){
+      context.push(...lines.filter(l=>edge.has(l)));
+      entries=segs.map(x=>{ const key=termKeyOf(x); return key ? {term:x,def:'',key} : null; }).filter(Boolean);
+    }
+  }
+  if(!entries) return null;
+  if(entries.length && /^(word|words|term|terms|vocab|vocabulary)$/i.test(entries[0].term) && /^(definition|meaning|definitions|meanings)$/i.test(entries[0].def||'')) entries.shift();
+  return { entries, context };
+}
+// sources: [{kind:'notes'|'file'|'image', text}] -> {items, context, dupRemoved, truncated} or null (not a term list)
+function detectTermList(sources){
+  const lists=[], ctx=[]; let proseChars=0;
+  for(const s of sources){
+    const r=parseOneList(s.text);
+    if(r){ lists.push(r); ctx.push(...r.context); }
+    else if(s.kind==='notes') ctx.push(String(s.text||'').trim());
+    else proseChars+=String(s.text||'').length;
+  }
+  if(!lists.length || proseChars>1500) return null;
+  const byKey=new Map(); let dupRemoved=0;
+  for(const l of lists) for(const it of l.entries){
+    const prev=byKey.get(it.key);
+    if(prev){ dupRemoved++; if(!prev.def && it.def) prev.def=it.def; } else byKey.set(it.key,{...it});
+  }
+  let items=[...byKey.values()], truncated=0;
+  if(items.length>3000){ truncated=items.length-3000; items=items.slice(0,3000); }
+  const context=ctx.filter(Boolean).join(' ').replace(/\s+/g,' ').slice(0,600);
+  return items.length>=8 ? { items, context, dupRemoved, truncated } : null;
+}
+
+// ---- term-list generation (one card per term, verified coverage) ----
+const LIST_TOKENS={ basic:55, fitb:80, mcq:120 };
+function termPrompt(cardType, batchItems, perTerm, context){
+  const list=batchItems.map((it,i)=>`${i+1}. ${it.def ? it.term+' — '+it.def : it.term}`).join('\n');
+  const k=perTerm;
+  const common=`Create study cards for EACH term in the numbered list below: exactly ${k} card${k>1?'s':''} per term, in the same order as the list.
+Never skip a term, never repeat a term, and never add terms that are not in the list. Copy each term into the "term" field exactly as listed (no number, no definition).
+If the list gives a definition for a term, base the card on it. If a term has no definition, use its standard, well-established dictionary meaning (the most common meaning for a student-level vocabulary list); do not invent obscure senses.
+${k>1?'With more than one card per term, each card must test a different angle (meaning, use in a sentence, synonym/antonym) and have a different front.\n':''}${context?`Extra instructions from the student: ${context}\n`:''}`;
+  const tail=`\nTerms:\n${list}\n`;
+  if(cardType==='mcq') return `${common}Each card is one multiple-choice question testing the term's meaning. Vary the stems naturally (e.g. "What does X mean?", "Which word means ...?", or a short sentence-completion). Exactly 4 options and exactly one correct answer. Distractors must be plausible real meanings or words (not nonsense) with similar length and style; do not label options with letters; avoid "all/none of the above"; do not always make the correct option the longest.${tail}Return ONLY JSON: {"cards":[{"term":"...","question":"...","options":["...","...","...","..."],"answer":"must exactly equal one option"}]}.`;
+  if(cardType==='fitb') return `${common}Each card is a sentence that uses the term, with the term replaced by ___ (three underscores). The sentence context must make the meaning clear without being a giveaway. "answers" lists the term plus any inflected form that would also fit grammatically.${tail}Return ONLY JSON: {"cards":[{"term":"...","question":"... ___ ...","answers":["..."]}]}.`;
+  return `${common}Front = the term. Back = a concise definition that starts with the part of speech in parentheses, for example "(adj.) tending to ...".${tail}Return ONLY JSON: {"cards":[{"term":"...","front":"...","back":"..."}]}.`;
+}
+// Assigns returned cards to the terms of one batch. Returns Map(batchIndex -> cards[]).
+function mapToItems(batchItems, cards, perTerm){
+  const byKey=new Map(batchItems.map((it,i)=>[it.key,i]));
+  const out=new Map(), left=[];
+  for(const c of cards){
+    const k=termKeyOf(c.term||'');
+    let idx=byKey.has(k) ? byKey.get(k) : -1;
+    if(idx<0 && k){ for(const [bk,bi] of byKey){ if(bk && (k.startsWith(bk+' ')||bk.startsWith(k+' '))){ idx=bi; break; } } }
+    if(idx<0){ left.push(c); continue; }
+    if(!out.has(idx)) out.set(idx,[]);
+    out.get(idx).push(c);
+  }
+  // model garbled/omitted some "term" fields: align the leftovers with the still-uncovered terms in order
+  const open=batchItems.map((_,i)=>i).filter(i=>!out.has(i));
+  if(left.length && perTerm===1 && left.length===open.length) left.forEach((c,j)=>out.set(open[j],[c]));
+  for(const [i,cs] of out){
+    const it=batchItems[i];
+    out.set(i, cs.slice(0,perTerm).map(c=>({...c, term:it.term, key:it.key})));
+  }
+  return out;
+}
+async function generateForTerms(items, o){
+  const k=o.perTerm||1, type=o.cardType;
+  const got=new Array(items.length).fill(null);
+  const pace={limit:o.concurrency||3};
+  let fatal=null, soft=null;
+  const halt=()=>!!fatal || !!(o.shouldStop && o.shouldStop());
+  const report=phase=>{ if(!o.onProgress) return; let done=0, cards=0; for(const g of got) if(g){ done++; cards+=g.length; } o.onProgress({phase, done, total:items.length, cards}); };
+  const runBatches=async(idxs,size)=>{
+    const groups=[]; for(let i=0;i<idxs.length;i+=size) groups.push(idxs.slice(i,i+size));
+    const tasks=groups.map(g=>async()=>{
+      if(halt()) return;
+      const batchItems=g.map(i=>items[i]);
+      const prompt=termPrompt(type, batchItems, k, o.context);
+      const budget=Math.min(7000, batchItems.length*k*LIST_TOKENS[type]+900);
+      try{
+        const parsed=await o.request(prompt, budget, pace);
+        const m=mapToItems(batchItems, normalizeCards(type, parsed), k);
+        for(const [bi,cs] of m) if(cs.length) got[g[bi]]=cs;
+      }catch(err){
+        if(err.kind==='stopped') return;
+        if(err.kind==='parse'){ soft=err; }                      // retried below with smaller batches
+        else { fatal=err; }                                       // limits / auth / too-large: no point continuing
+      }
+      report('generating');
+    });
+    await runPool(tasks, pace, halt);
+  };
+  const sizes=[o.batchSize, Math.max(6,Math.floor(o.batchSize/3)), 3];
+  for(let pass=0; pass<sizes.length; pass++){
+    const pending=items.map((_,i)=>i).filter(i=>!got[i]);
+    if(!pending.length || halt()) break;
+    if(pass===2 && pending.length>30) break;                      // systematic failure: don't burn tokens
+    if(pass>0 && o.onProgress) o.onProgress({phase:'repair', pending:pending.length, done:items.length-pending.length, total:items.length});
+    await runBatches(pending, sizes[pass]);
+  }
+  const cards=[], missing=[];
+  items.forEach((it,i)=>{ if(got[i]) cards.push(...got[i]); else missing.push(it); });
+  return { cards, missing, fatal, soft, stopped: !!(o.shouldStop && o.shouldStop()) };
+}
+
+// ---- prose generation (sections with quotas, targeted top-ups) ----
+function allocateQuotas(total, weights){
+  const sum=weights.reduce((a,b)=>a+b,0)||1;
+  const raw=weights.map(w=>total*w/sum), base=raw.map(Math.floor);
+  let left=total-base.reduce((a,b)=>a+b,0);
+  const order=raw.map((r,i)=>[r-Math.floor(r),i]).sort((a,b)=>b[0]-a[0]);
+  for(let j=0; left>0 && j<order.length; j++, left--) base[order[j][1]]++;
+  return base;
+}
+const PROSE_TOKENS={ basic:70, fitb:90, mcq:130 };
+async function generateFromSections(text, o){
+  // o: {count, cardType, noun, allowExpansion, batchCap, makePrompt(countText, avoidText, material), request(prompt,budget,pace), normalize, dedupe, onProgress, shouldStop}
+  const auto=o.count.mode==='auto';
+  const target=auto ? Infinity : o.count.max, need=auto ? 0 : o.count.min;
+  const len=text.length;
+  const wanted=Math.max(1, Math.ceil(len/7000));
+  const nSec=Math.max(1, auto ? wanted : Math.min(wanted, target));
+  let chunks=splitSourceIntoChunks(text, Math.ceil(len/nSec*1.05)+50);
+  if(!chunks.length) chunks=['(No source text.)'];
+  const quotas=auto ? chunks.map(()=>0) : allocateQuotas(target, chunks.map(c=>c.length));
+  const sec=chunks.map(()=>[]);        // normalised cards per section (deduped inside the section)
+  const pace={limit:2};
+  let fatal=null, soft=null;
+  const halt=()=>!!fatal || !!(o.shouldStop && o.shouldStop());
+  const total=()=>sec.reduce((a,s)=>a+s.length,0);
+  const report=phase=>{ if(o.onProgress) o.onProgress({phase, done:total(), total:auto?null:target, sections:chunks.length}); };
+  const budgetFor=n=>Math.min(7000, Math.max(1500, n*PROSE_TOKENS[o.cardType]+900));
+  // asks for up to n more cards from one section; returns how many new ones survived de-duplication
+  const ask=async(i, n, lo)=>{
+    const have=sec[i];
+    const avoid=have.length ? `Cards already written for this section. Do NOT repeat or rephrase any of them:\n${have.slice(-40).map(c=>'- '+c.front).join('\n').slice(-2500)}\n` : '';
+    const countText=auto ? `${autoCountInstruction(o.noun, o.allowExpansion)} Return at most ${n}.` : countInstruction(o.noun, lo, n, o.allowExpansion);
+    try{
+      const parsed=await o.request(o.makePrompt(countText, avoid, chunks[i]), budgetFor(n), pace);
+      const fresh=dedupeCards(o.normalize(parsed));
+      const merged=dedupeCards(have.concat(fresh));
+      const added=merged.length-have.length;
+      sec[i]=merged; report('generating');
+      return added;
+    }catch(err){
+      if(err.kind==='stopped') return 0;
+      if(err.kind==='parse'){ soft=err; return 0; }
+      fatal=err; return 0;
+    }
+  };
+  // pass 1: every section once, in parallel (sections are independent so they cannot repeat each other)
+  const tasks=chunks.map((_,i)=>async()=>{
+    if(halt()) return;
+    if(auto){
+      for(let r=0; r<3 && !halt(); r++){ const added=await ask(i, o.batchCap, 1); if(added<o.batchCap*0.9) break; }
+      return;
+    }
+    const q=quotas[i]; if(q<=0) return;
+    let remaining=q;
+    while(remaining>0 && !halt()){
+      const n=Math.min(o.batchCap, remaining);
+      const lo=o.count.min===o.count.max ? n : Math.max(1, Math.floor(need*n/target));
+      const added=await ask(i, n, lo);
+      if(!added) break;
+      remaining-=added;
+    }
+  });
+  await runPool(tasks, pace, halt);
+  const mergeAll=()=>dedupeCards(o.dedupe(sec.flat()));
+  let merged=mergeAll();
+  // pass 2: if short of the minimum, ask the sections that still have material for more (with their own avoid-lists)
+  if(!auto && merged.length<need){
+    const exhausted=new Set();
+    const guardMax=Math.ceil((need-merged.length)/o.batchCap)+chunks.length*2+2;
+    for(let g=0; g<guardMax && merged.length<need && !halt(); g++){
+      const cand=chunks.map((_,i)=>i).filter(i=>!exhausted.has(i));
+      if(!cand.length) break;
+      const i=cand[g%cand.length];
+      const missing=need-merged.length, n=Math.min(o.batchCap, missing);
+      const before=merged.length;
+      await ask(i, n, n);
+      merged=mergeAll();
+      if(merged.length===before) exhausted.add(i);
+      if(o.onProgress) o.onProgress({phase:'topup', done:merged.length, total:target, sections:chunks.length});
+    }
+  }
+  return { cards: auto ? merged : merged.slice(0,target), fatal, soft, stopped: !!(o.shouldStop && o.shouldStop()), sections: chunks.length };
+}
+
+// ---- final status line ----
+function doneMessage(c){
+  const n=c.n.toLocaleString();
+  const parts=[];
+  if(c.mode==='list'){
+    const t=c.info.total;
+    if(!c.info.missing.length && !c.stopped && !c.fatal) parts.push(c.info.perTerm>1 ? `Generated ${n} cards covering all ${t.toLocaleString()} terms (up to ${c.info.perTerm} per term), with no repeats.` : `Generated ${n} cards: exactly one for each of your ${t.toLocaleString()} terms, with no repeats.`);
+    else parts.push(`Generated ${n} cards for ${(t-c.info.missing.length).toLocaleString()} of ${t.toLocaleString()} terms.`);
+    if(c.info.dupRemoved) parts.push(`${c.info.dupRemoved} duplicate term${c.info.dupRemoved===1?'':'s'} in your list ${c.info.dupRemoved===1?'was':'were'} merged.`);
+    if(c.info.skippedExisting) parts.push(`${c.info.skippedExisting} term${c.info.skippedExisting===1?'':'s'} already in this set ${c.info.skippedExisting===1?'was':'were'} skipped.`);
+    if(c.info.limited) parts.push(`Only the first ${c.info.limited.toLocaleString()} terms were used because of the requested card count.`);
+    if(c.info.truncated) parts.push(`${c.info.truncated} terms beyond the 3,000-term limit were ignored.`);
+    if(c.info.missing.length){
+      const names=c.info.missing.slice(0,6).map(x=>x.term).join(', ');
+      parts.push(`Couldn't complete: ${names}${c.info.missing.length>6?`, and ${c.info.missing.length-6} more`:''}. Save these, then run the same list again into the same set: terms already saved are skipped, so only the missing ones are retried.`);
+    }
+  } else {
+    const k=c.count;
+    if(k.mode==='auto') parts.push(`Generated ${c.n===1?'1 card':n+' cards'}.`);
+    else if(k.mode==='exact' && c.n<k.max) parts.push(c.allowExpansion
+      ? `Generated ${n} of ${k.max.toLocaleString()} requested cards. The model stopped producing enough distinct cards. You can save these or retry.`
+      : `Generated ${n} of ${k.max.toLocaleString()} requested cards using only supported source facts. To include related knowledge and try to fill the rest, enable “Allow related knowledge to fill the requested count.”`);
+    else if(c.n<k.min) parts.push(`Generated ${n} cards; the requested minimum is ${k.min.toLocaleString()}. ${c.allowExpansion?'The model could not complete the quota.':'Only distinct source-supported facts were included; no outside facts were guessed.'}`);
+    else parts.push(k.min===k.max ? `Generated exactly ${c.n===1?'1 card':n+' cards'}.` : `Generated ${c.n===1?'1 card':n+' cards'} (range ${k.min}–${k.max}).`);
+    if(c.topicOnly) parts.push('Your input looked like a topic rather than notes, so general subject knowledge was used.');
+  }
+  if(c.stopped) parts.push('Stopped early at your request.');
+  else if(c.fatal) parts.push(`Stopped early: ${c.fatal.message||'a request failed'}.`);
+  return parts.join(' ')+' Review below, then save.';
+}
 
 function renderAI(){
   const el=document.getElementById('tab-ai'), decks=Object.values(state.decks);
   el.innerHTML=`<div class="card">${panelHeader('sparkle','Create with AI','Let AI turn your notes, files, or ideas into a set of study decks.')}
-    <label>Attach files (text, .md, .csv, PDF, or images)</label>
+    <label>Attach files (.txt, .md, .csv, .docx, PDF, or images)</label>
     <div class="dropzone" id="aiDropzone">${ICONS.file}<button type="button" class="dropzone-btn" id="aiChooseBtn">Choose Files</button><span class="dropzone-label" id="aiFileLabel">No file chosen</span></div>
-    <input type="file" id="aiFileInput" multiple accept=".txt,.md,.csv,.pdf,image/*" class="hidden">
+    <input type="file" id="aiFileInput" multiple accept=".txt,.md,.csv,.docx,.pdf,image/*" class="hidden">
     <div class="filelist" id="aiFileList"></div>
     <label>Extra notes (optional)</label>
     <textarea id="aiInput" placeholder="Any extra context or a topic to focus on"></textarea>
@@ -1249,14 +1942,21 @@ function renderAI(){
       <div><label for="aiCountMax">Maximum</label><input type="number" id="aiCountMax" min="${MIN_CARDS}" max="${MAX_CARDS}" step="1" value="20" inputmode="numeric"></div>
     </div>
     <p class="count-hint" id="aiCountHint"></p>
-    <p class="sub import-tip">Cards already in the set you're adding to are skipped, so you won't get duplicates. Review the generated cards before saving.</p>
+    <div class="import-tip" style="margin-top:10px;">
+      <label style="margin:0;display:flex;align-items:flex-start;gap:9px;font-size:13px;font-weight:600;">
+        <input type="checkbox" id="aiAllowExpansion" style="width:auto;min-height:0;margin-top:3px;flex:0 0 auto;">
+        Allow related knowledge to fill the requested count
+      </label>
+      <p class="sub" style="margin:6px 0 0 24px;font-size:12px;">Off by default: cards must be supported by your notes/files. Turn on only when you want extra facts from general subject knowledge. Exact counts cannot be guaranteed without repetition or unsupported claims if the source is too short.</p>
+    </div>
+    <p class="sub import-tip"><b>Word or term lists</b> (one per line, or <code>word - definition</code>) are detected automatically: every term gets its own card, so nothing repeats and nothing is skipped. A short topic with no files uses general knowledge automatically. Cards already in the set you're adding to are skipped. Review the generated cards before saving.</p>
     <label>Add to set</label>
     <select id="aiSetSel"></select>
     <input id="aiNewName" class="hidden" placeholder="New set name" style="margin-top:8px;">
     <label>Cards per deck</label>
     <select id="aiChunkSel"><option value="20" selected>Up to 20 cards</option><option value="10">Up to 10 cards</option><option value="30">Up to 30 cards</option><option value="50">Up to 50 cards</option></select>
     <p class="sub import-tip" style="margin-top:6px;">New cards are split evenly into decks of this size and added to the set, so you can study one deck at a time.</p>
-    <button class="btn" id="aiBtn" style="margin-top:10px;">${ICONS.sparkle} Generate cards</button>
+    <button class="btn" id="aiBtn" style="margin-top:10px;">${ICONS.sparkle} Generate cards</button> <button type="button" class="btn secondary hidden" id="aiStopBtn" style="margin-top:10px;">Stop</button>
     <p class="sub" id="aiStatus"></p><div id="aiPreview"></div></div>`;
   const sel=document.getElementById('aiSetSel');
   const chunkSel=document.getElementById('aiChunkSel');
@@ -1267,16 +1967,25 @@ function renderAI(){
     sel.innerHTML='<option value="__new">+ New set</option>'+Object.values(state.sets).map(st=>`<option value="${st.id}">${escapeHtml(setLabel(st))}</option>`).join('');
     sel.value=(selectedId && state.sets[selectedId]) ? selectedId : '__new';
   };
-  // fronts already present anywhere in the selected set (empty when making a new set)
-  const targetFronts=()=>{
-    const have=new Set(), st=state.sets[sel.value];
-    if(st) setDeckIds(st).forEach(id=>state.decks[id].cards.forEach(c=>have.add(c.front.toLowerCase().trim())));
-    return have;
+  // what the selected set already contains (empty when making a new set)
+  const existingState=()=>{
+    const keys=new Set(), toks=[], st=state.sets[sel.value];
+    if(st) setDeckIds(st).forEach(id=>state.decks[id].cards.forEach(c=>{
+      const k=normKey(c.front); if(!k) return;
+      keys.add(k);
+      const t=new Set(dedupeTokens(k)); if(t.size>=4) toks.push(t);
+    }));
+    return {keys, toks};
   };
-  const freshFrom=list=>{
-    const seen=targetFronts();
-    return list.filter(c=>{ const k=c.front.toLowerCase().trim(); if(seen.has(k)) return false; seen.add(k); return true; });
+  const existingTermKeys=()=>{
+    const keys=new Set(), st=state.sets[sel.value];
+    if(st) setDeckIds(st).forEach(id=>state.decks[id].cards.forEach(c=>{
+      if(c.key) keys.add(c.key);
+      const f=String(c.front||''); if(f && f.split(/\s+/).length<=4) keys.add(termKeyOf(f));
+    }));
+    return keys;
   };
+  const freshFrom=list=>dedupeCards(list, existingState());
   const updateSaveLabel=()=>{
     const b=document.getElementById('aiSaveBtn'); if(!b) return;
     const fresh=freshFrom(readyCards);
@@ -1330,126 +2039,120 @@ function renderAI(){
     if(count.error){ toast(count.error); refreshCount(); return; }
     const notes=document.getElementById('aiInput').value.trim();
     const cardType=document.getElementById('aiCardType').value;
-    const btn=document.getElementById('aiBtn');
-    btn.disabled=true; document.getElementById('aiStatus').innerHTML='<span class="spinner"></span> Reading files…';
+    const btn=document.getElementById('aiBtn'), stopBtn=document.getElementById('aiStopBtn');
+    const statusEl=document.getElementById('aiStatus');
+    const fmt=n=>Number(n).toLocaleString();
+    let stopped=false;
+    stopBtn.disabled=false;
+    stopBtn.onclick=()=>{ stopped=true; stopBtn.disabled=true; statusEl.textContent='Stopping after the current requests finish…'; };
+    const shouldStop=()=>stopped;
+    btn.disabled=true; statusEl.innerHTML='<span class="spinner"></span> Reading files…';
+    document.getElementById('aiPreview').innerHTML='';
     try{
-      let combinedText = notes;
-      const images = [];
+      const sources=[];   // {kind:'notes'|'file'|'image', text}
+      if(notes) sources.push({kind:'notes', text:notes});
+      let images=[];
       for(const f of aiFiles){
+        const fileName=f.name.toLowerCase();
         if(f.type.startsWith('image/')) images.push(await readAsDataURL(f));
-        else if(f.type==='application/pdf' || f.name.endsWith('.pdf')) combinedText += '\n\n'+await extractPdfText(f);
-        else combinedText += '\n\n'+await readAsText(f);
+        else if(f.type==='application/pdf' || fileName.endsWith('.pdf')) sources.push({kind:'file', text:await extractPdfText(f)});
+        else if(fileName.endsWith('.docx') || f.type==='application/vnd.openxmlformats-officedocument.wordprocessingml.document') sources.push({kind:'file', text:await extractDocxText(f)});
+        else sources.push({kind:'file', text:await readAsText(f)});
       }
-      if(!combinedText.trim() && !images.length){ toast('Add notes or attach at least one file first.'); btn.disabled=false; document.getElementById('aiStatus').textContent=''; return; }
-
-      // existing context to avoid duplicates: the whole target set, plus a lighter look at other decks
-      const targetSet=state.sets[sel.value];
-      const targetIds=new Set(targetSet ? setDeckIds(targetSet) : []);
-      let setContext='';
-      if(targetSet){
-        const fronts=[...targetIds].flatMap(id=>state.decks[id].cards.map(c=>c.front));
-        let joined=fronts.join(' | '); if(joined.length>6000) joined=joined.slice(0,6000)+' …';
-        setContext=`You are ADDING to the existing set "${targetSet.name}", which already has ${fronts.length} card(s) across ${targetIds.size} deck(s). Continue with new material and do NOT repeat anything it already covers. Every front already in this set: ${joined||'(none yet)'}\n`;
+      if(!sources.some(s=>s.text.trim()) && !images.length){ toast('Add notes or attach at least one file first.'); btn.disabled=false; statusEl.textContent=''; return; }
+      stopBtn.classList.remove('hidden');
+      if(images.length){
+        statusEl.innerHTML=`<span class="spinner"></span> Reading image content once…`;
+        const imageSource=await extractImageSourceOnce(images);
+        sources.push({kind:'image', text:imageSource});
+        images=[];
       }
-      const otherSummary = Object.values(state.decks).filter(d=>!targetIds.has(d.id)).map(d=>
-        `Deck "${d.name}" already has ${d.cards.length} card(s), fronts include: ${d.cards.slice(0,25).map(c=>c.front).join(' | ')}`
-      ).join('\n').slice(0,4000);
-      const existingSummary = setContext + otherSummary;
+      const combinedText=sources.map(s=>String(s.text||'').trim()).filter(Boolean).join('\n\n');
+      const sourceWordCount=combinedText ? combinedText.split(/\s+/).filter(Boolean).length : 0;
+      const model=MODEL;
+      const noun=cardType==='basic' ? 'card' : 'question';
+      const batchCap=batchSizeFor(cardType);
+      const request=(prompt,budget,pace)=>requestWithBackoff(model, prompt, [], budget, shouldStop, pace);
+      const userExpansion=document.getElementById('aiAllowExpansion').checked;
 
-      const noun = cardType==='basic' ? 'card' : 'question';
-      // countText = how many to write; existing = what the AI should avoid repeating
-      const makePrompt=(countText, existing)=> cardType==='mcq' ? `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality multiple-choice questions.
-${countText}
-Each question needs exactly 4 answer options with exactly one correct answer. Make the incorrect options plausible, not silly or obviously wrong.
-Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
-Existing decks:
-${existing || '(none yet)'}
+      let cards=[], run={mode:'prose'}, topicOnly=false, allowExpansion=userExpansion;
+      const listInfo=detectTermList(sources);
 
-${TOPIC_RULE}
-
-Material:
-${combinedText.slice(0,12000)}
-
-Respond with ONLY a JSON object like {"cards":[{"question":"...","options":["...","...","...","..."],"answer":"..."}]} and nothing else — no markdown, no commentary. "answer" must exactly match one of the strings in "options".`
-      : cardType==='fitb' ? `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality fill-in-the-blank questions.
-${countText}
-Each question is a sentence from the material with the key term or phrase replaced by ___ (three underscores). For each question, also give an "answers" array listing EVERY acceptable way to fill in that blank correctly — include reasonable synonyms, alternate spellings, abbreviations, singular/plural forms, and with/without accents, so a correct answer isn't marked wrong just for wording. Include at least 2 entries in "answers" whenever a genuine alternate wording exists.
-Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
-Existing decks:
-${existing || '(none yet)'}
-
-${TOPIC_RULE}
-
-Material:
-${combinedText.slice(0,12000)}
-
-Respond with ONLY a JSON object like {"cards":[{"question":"...___...","answers":["...","..."]}]} and nothing else — no markdown, no commentary.`
-      : `You are a flashcard-writing assistant. Read the provided material and produce a set of high-quality flashcards.
-${countText}
-Before finalizing, check the existing decks listed below. If a fact is already covered by an existing card, SKIP it rather than duplicating it.
-Existing decks:
-${existing || '(none yet)'}
-
-${TOPIC_RULE}
-
-Material:
-${combinedText.slice(0,12000)}
-
-Respond with ONLY a JSON object like {"cards":[{"front":"...","back":"..."}]} and nothing else — no markdown, no commentary.`;
-
-      const model = images.length>0 ? (VISION_MODEL || MODEL) : MODEL;
-      const normalize=parsed=>{
-      if(cardType==='mcq'){
-        return parsed.map(c=>{
-          const options=Array.isArray(c.options) ? c.options.map(o=>String(o).trim()).filter(Boolean) : [];
-          let correctIndex=options.findIndex(o=>o.toLowerCase()===String(c.answer||'').trim().toLowerCase());
-          if(correctIndex<0) correctIndex=0;
-          return { type:'mcq', front:String(c.question||'').trim(), options, correctIndex };
-        }).filter(c=>c.front && c.options.length>=2);
-      }else if(cardType==='fitb'){
-        return parsed.map(c=>({
-          type:'fitb',
-          front:String(c.question||'').trim(),
-          answers: Array.isArray(c.answers) ? c.answers.map(a=>String(a).trim()).filter(Boolean) : []
-        })).filter(c=>c.front && c.answers.length);
-      }else{
-        return parsed.map(c=>({ type:'basic', front:String(c.front||'').trim(), back:String(c.back||'').trim() })).filter(c=>c.front && c.back);
-      }
-      };
-      const fetchRound=async (countText, existing)=> normalize(await requestCards(model, makePrompt(countText, existing), images));
-      const statusEl=document.getElementById('aiStatus');
-
-      let cards=[];
-      if(count.mode==='auto'){
-        statusEl.innerHTML='<span class="spinner"></span> Generating cards…';
-        cards = freshFrom(await fetchRound(autoCountInstruction(noun), existingSummary));
-      }else{
-        // Ask in batches until the minimum is reached, then trim anything over the maximum.
-        const goal = count.min===count.max ? String(count.min) : `${count.min}–${count.max}`;
-        for(let round=0; round<MAX_ROUNDS && cards.length<count.min; round++){
-          const have=cards.length, remaining=count.min-have;
-          const lo=Math.min(remaining, BATCH_CARDS), hi=Math.min(count.max-have, BATCH_CARDS);
-          const avoid = have ? `Cards already written in this run — do NOT repeat or rephrase any of them: ${cards.map(c=>c.front).join(' | ').slice(0,4000)}\n` : '';
-          statusEl.innerHTML=`<span class="spinner"></span> Generating cards… ${have} so far (target ${goal})`;
-          let batch;
-          try{ batch = await fetchRound(countInstruction(noun, lo, hi), avoid+existingSummary); }
-          catch(err){ if(round===0) throw err; break; }   // keep what we already have if a later batch fails
-          const merged = freshFrom(cards.concat(batch));  // drops duplicates within this run and vs. the target set
-          if(merged.length===cards.length) break;         // nothing new came back — stop asking
-          cards = merged;
+      if(listInfo){
+        // ---- term list (e.g. vocabulary): every term goes to exactly one request, so nothing can repeat ----
+        const existing=existingTermKeys();
+        let items=listInfo.items.filter(it=>!existing.has(it.key));
+        const skippedExisting=listInfo.items.length-items.length;
+        if(!items.length) throw genError('empty','Every term in your list is already in that set, so there is nothing new to add.');
+        let perTerm=1, limited=0;
+        if(count.mode!=='auto'){
+          if(count.max<items.length){ limited=count.max; items=items.slice(0,count.max); }
+          else if(count.max>items.length) perTerm=Math.min(3, Math.ceil(count.max/items.length));
         }
-        cards = cards.slice(0, count.max);
+        statusEl.innerHTML=`<span class="spinner"></span> Found a list of ${fmt(items.length)} terms. Writing ${perTerm>1?perTerm+' '+noun+'s':'one '+noun} per term in ${fmt(Math.ceil(items.length/batchCap))} batches…`;
+        const res=await generateForTerms(items,{
+          cardType, perTerm, context:listInfo.context, request, shouldStop, batchSize:batchCap, concurrency:3,
+          onProgress:p=>{
+            statusEl.innerHTML = p.phase==='repair'
+              ? `<span class="spinner"></span> Retrying ${fmt(p.pending)} skipped term${p.pending===1?'':'s'}… ${fmt(p.done)} / ${fmt(p.total)} terms done`
+              : `<span class="spinner"></span> Building your deck… ${fmt(p.done)} / ${fmt(p.total)} terms · ${fmt(p.cards)} cards`;
+          }
+        });
+        cards=freshFrom(res.cards);
+        if(count.mode!=='auto') cards=cards.slice(0,count.max);
+        run={ mode:'list', fatal:res.fatal, stopped:res.stopped,
+              info:{ total:items.length, missing:res.missing, dupRemoved:listInfo.dupRemoved, skippedExisting, perTerm, limited, truncated:listInfo.truncated } };
+      } else {
+        // ---- free-form notes / documents / topics ----
+        // A few words with no files is a topic ("photosynthesis"), not source notes, so allow general knowledge.
+        topicOnly = !aiFiles.length && sourceWordCount>0 && sourceWordCount<30;
+        allowExpansion = userExpansion || topicOnly;
+        const targetSet=state.sets[sel.value];
+        const targetIds=new Set(targetSet ? setDeckIds(targetSet) : []);
+        const destinationFronts=targetSet ? [...targetIds].flatMap(id=>state.decks[id].cards.map(c=>c.front)).slice(-12) : [];
+        const destHint=destinationFronts.length ? `Recent destination-set fronts to avoid: ${destinationFronts.join(' | ').slice(0,1200)}\n` : '';
+        const contentPolicy=allowExpansion
+          ? 'When the supplied material is insufficient, you may include accurate, well-established related subject facts. Avoid obscure or uncertain claims.'
+          : 'SOURCE-ONLY MODE: every answer must be directly supported by the Material below. Do not rely on background knowledge, make assumptions, or infer facts not stated. Prefer fewer grounded cards over invented cards.';
+        const makePrompt=(countText, existingText, material)=> cardType==='mcq' ? `Create high-quality multiple-choice questions from the material below.
+${countText}
+${contentPolicy}
+Each question needs exactly 4 answer options with exactly one correct answer. Make distractors plausible and ensure the answer exactly matches one option. Each question must test a distinct fact.
+${destHint}${existingText||''}${TOPIC_RULE}
+Material:
+${material}
+Return ONLY JSON: {"cards":[{"question":"...","options":["...","...","...","..."],"answer":"..."}]}.`
+        : cardType==='fitb' ? `Create high-quality fill-in-the-blank questions from the material below.
+${countText}
+${contentPolicy}
+Use a sentence supported by the source with the key term replaced by ___ (three underscores). Include accepted answers that are actually equivalent; do not invent synonyms.
+${destHint}${existingText||''}${TOPIC_RULE}
+Material:
+${material}
+Return ONLY JSON: {"cards":[{"question":"...___...","answers":["..."]}]}.`
+        : `Create high-quality flashcards from the material below.
+${countText}
+${contentPolicy}
+Each card must test a distinct fact. Keep backs concise${allowExpansion?'':' and directly supported by the source'}.
+${destHint}${existingText||''}${TOPIC_RULE}
+Material:
+${material}
+Return ONLY JSON: {"cards":[{"front":"...","back":"..."}]}.`;
+        statusEl.innerHTML=`<span class="spinner"></span> Generating cards…${sourceWordCount?` using ${fmt(sourceWordCount)} source words`:''}`;
+        const res=await generateFromSections(combinedText || '(No source text.)',{
+          count, cardType, noun, allowExpansion, batchCap, makePrompt, request, shouldStop,
+          normalize:parsed=>normalizeCards(cardType, parsed), dedupe:freshFrom,
+          onProgress:p=>{
+            statusEl.innerHTML=`<span class="spinner"></span> ${p.phase==='topup'?'Looking for more distinct cards…':'Building your deck…'} ${fmt(p.done)}${p.total?' / '+fmt(p.total):''} cards${p.sections>1?` · ${p.sections} source sections`:''}`;
+          }
+        });
+        cards=res.cards;
+        run={ mode:'prose', fatal:res.fatal, stopped:res.stopped };
       }
+      if(!cards.length && run.fatal) throw run.fatal;
       if(!cards.length) throw genError('empty');
 
-      {
-        const n=cards.length;
-        let msg;
-        if(count.mode==='auto') msg=`Generated ${cardWord(n)}.`;
-        else if(n<count.min) msg=`Generated ${cardWord(n)} — fewer than the ${count.min===count.max ? count.min : 'minimum of '+count.min} you asked for. The material may not have enough distinct content; try ${count.min===count.max ? 'a lower number' : 'a lower minimum'} or add more notes.`;
-        else msg = count.min===count.max ? `Generated exactly ${cardWord(n)}.` : `Generated ${cardWord(n)} (range ${count.min}–${count.max}).`;
-        document.getElementById('aiStatus').textContent = msg+' Review below, then save.';
-      }
+      document.getElementById('aiStatus').textContent=doneMessage({ mode:run.mode, n:cards.length, count, allowExpansion, topicOnly, info:run.info, stopped:run.stopped, fatal:run.fatal });
       const preview = document.getElementById('aiPreview');
       preview.innerHTML = cardType==='mcq'
         ? `<div class="overflow-x"><table><tr><th>Question</th><th>Options</th><th>Correct</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${c.options.map(o=>escapeHtml(o)).join('<br>')}</td><td>${escapeHtml(c.options[c.correctIndex])}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`
@@ -1458,11 +2161,15 @@ Respond with ONLY a JSON object like {"cards":[{"front":"...","back":"..."}]} an
         : `<div class="overflow-x"><table><tr><th>Front</th><th>Back</th></tr>${cards.map(c=>`<tr><td>${escapeHtml(c.front)}</td><td>${escapeHtml(c.back)}</td></tr>`).join('')}</table></div><button class="btn" id="aiSaveBtn" style="margin-top:10px;">Save all to deck</button>`;
 
       readyCards=cards; updateSaveLabel();
-      const makeCard=c=> c.type==='mcq'
-        ? {id:uid(), type:'mcq', front:c.front, options:c.options, correctIndex:c.correctIndex, back:c.options[c.correctIndex], interval:0, ease:2.5, due:0, reps:0}
-        : c.type==='fitb'
-        ? {id:uid(), type:'fitb', front:c.front, answers:c.answers, back:c.answers[0], interval:0, ease:2.5, due:0, reps:0}
-        : {id:uid(), type:'basic', front:c.front, back:c.back, interval:0, ease:2.5, due:0, reps:0};
+      const makeCard=c=>{
+        const base= c.type==='mcq'
+          ? {id:uid(), type:'mcq', front:c.front, options:c.options, correctIndex:c.correctIndex, back:c.options[c.correctIndex], interval:0, ease:2.5, due:0, reps:0}
+          : c.type==='fitb'
+          ? {id:uid(), type:'fitb', front:c.front, answers:c.answers, back:c.answers[0], interval:0, ease:2.5, due:0, reps:0}
+          : {id:uid(), type:'basic', front:c.front, back:c.back, interval:0, ease:2.5, due:0, reps:0};
+        if(c.key) base.key=c.key;
+        return base;
+      };
       // Adds the cards to the selected set (or a brand-new one) as new decks, split evenly.
       const commitAdd=newSetName=>{
         const isNew=sel.value==='__new';
@@ -1497,10 +2204,12 @@ Respond with ONLY a JSON object like {"cards":[{"front":"...","back":"..."}]} an
       const msgs={
         parse:"The AI didn't return valid cards after a few tries. Try again, or add a bit more detail in the notes.",
         empty:"The AI didn't find anything new to turn into cards. Try adding more material or a different topic.",
-        api:'Could not generate cards ('+e.message+'). Make sure GROQ_API_KEY is set on your host and try again.'
+        api:'Could not generate cards ('+e.message+'). Make sure GROQ_API_KEY is set on your host and try again.',
+        limit:'Could not finish: '+e.message+'.'
       };
-      document.getElementById('aiStatus').textContent = msgs[e.kind] || ('Could not generate cards ('+e.message+').');
+      document.getElementById('aiStatus').textContent = (e.kind==='empty' && e.message && e.message!=='empty') ? e.message : (msgs[e.kind] || ('Could not generate cards ('+e.message+').'));
     }
+    stopBtn.classList.add('hidden');
     btn.disabled=false;
   };
 }
@@ -1520,6 +2229,7 @@ function updateAIFileList(files){
 }
 function setupGlobalUX(){
   initTheme();
+  updateHeaderStreak();
   document.getElementById('themeToggle').onclick=toggleTheme;
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape' && studySession && !document.getElementById('modalRoot').innerHTML){
