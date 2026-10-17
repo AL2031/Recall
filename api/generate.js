@@ -10,9 +10,8 @@
 //   GROQ_API_KEY_3       ... up to GROQ_API_KEY_10
 //   GROQ_API_KEYS        a single comma-separated list, e.g. "key1,key2,key3"
 //                         (use this if you have more than 10 keys)
-// On each request a key is picked at random. If that key comes back
-// rate-limited or unauthorized, the function automatically retries with the
-// next key before giving up.
+// API keys rotate only when the provider reports rate limits or authentication errors.
+// They do not change per-token pricing; configure only keys you are authorized to use.
 
 function collectApiKeys() {
   const keys = new Set();
@@ -61,7 +60,7 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const { model, messages, temperature, response_format } = req.body || {};
+  const { model, messages, temperature, response_format, max_completion_tokens, max_tokens, reasoning_effort, include_reasoning } = req.body || {};
   if (!model || !messages) {
     res.status(400).json({ error: 'Missing model or messages in request body' });
     return;
@@ -69,6 +68,7 @@ module.exports = async (req, res) => {
 
   const order = shuffle(keys.slice());
   let lastStatus = 500;
+  let lastRetryAfter = null;
   let lastError = { error: 'All configured Groq API keys failed.' };
 
   for (const apiKey of order) {
@@ -83,7 +83,14 @@ module.exports = async (req, res) => {
           model,
           messages,
           temperature: temperature ?? 0.4,
-          ...(response_format ? { response_format } : {})
+          // Keep structured flashcard batches from being silently cut off by a low default.
+          // Prefer the current parameter name but accept max_tokens from older clients.
+          max_completion_tokens: Number.isFinite(Number(max_completion_tokens ?? max_tokens))
+            ? Math.min(8192, Math.max(256, Number(max_completion_tokens ?? max_tokens)))
+            : 8192,
+          ...(response_format ? { response_format } : {}),
+          ...(reasoning_effort ? { reasoning_effort } : {}),
+          ...(typeof include_reasoning === 'boolean' ? { include_reasoning } : {})
         })
       });
 
@@ -91,6 +98,7 @@ module.exports = async (req, res) => {
       // of failing the whole request.
       if (groqResp.status === 429 || groqResp.status === 401 || groqResp.status === 403) {
         lastStatus = groqResp.status;
+        lastRetryAfter = groqResp.headers.get('retry-after') || lastRetryAfter;
         lastError = (await safeJson(groqResp)) || lastError;
         continue;
       }
@@ -105,8 +113,12 @@ module.exports = async (req, res) => {
   }
 
   // Every key was rate-limited / invalid / errored.
+  // Pass Groq's wait hint through so the page can pause exactly as long as needed
+  // instead of guessing (per-minute limits clear in seconds; daily limits take hours).
+  if (lastRetryAfter) res.setHeader('retry-after', lastRetryAfter);
   res.status(lastStatus).json({
     error: `All ${order.length} configured Groq API key(s) failed (last status ${lastStatus}).`,
+    retry_after_seconds: lastRetryAfter ? Number(lastRetryAfter) : undefined,
     details: lastError
   });
 };
