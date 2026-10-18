@@ -1472,6 +1472,8 @@ th { position: sticky; top: 0; background: var(--surface-2); color: var(--sub); 
 }
 .coach{display:grid;gap:16px;max-width:720px;margin:0 auto}
 .coach textarea{width:100%;min-height:84px;margin:10px 0}
+.coach-custom{width:150px;padding:6px 10px;border-radius:99px}
+.plan-days ol{max-height:260px;overflow:auto;padding-left:22px;margin:8px 0}
 .coach-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
 .coach .chip{cursor:pointer;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);padding:6px 12px;border-radius:99px;font:inherit}
 .coach .chip.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
@@ -2029,6 +2031,10 @@ function setRowHtml(s){
       <button class="btn secondary" data-act="setmanage" data-id="${s.id}" title="Choose decks in this set" aria-label="Choose decks in this set">${ICONS.layers} Decks</button>
       <details class="menu"><summary class="btn secondary btn-icon" aria-label="More set actions">${ICONS.more}</summary><div class="menu-pop">
         <button class="menu-item" data-act="setrename" data-id="${s.id}">${ICONS.pencil} Rename set</button>
+        <button class="menu-item" data-act="setexport" data-id="${s.id}">${ICONS.download} Export set CSV</button>
+        <button class="menu-item" data-act="setexportgimkit" data-id="${s.id}">${ICONS.download} Export set for Gimkit</button>
+        <button class="menu-item" data-act="setexportquizlet" data-id="${s.id}">${ICONS.download} Export set for Quizlet</button>
+        <button class="menu-item" data-act="setprint" data-id="${s.id}">${ICONS.print} Print set flashcards</button>
         <div class="menu-sep"></div>
         <button class="menu-item danger" data-act="setdel" data-id="${s.id}">${ICONS.trash} Delete set</button></div></details>
     </div></div>
@@ -2101,6 +2107,8 @@ function renderDecks(){
   }
   el.querySelectorAll('[data-act="setstudy"]').forEach(b=>b.onclick=()=>startStudySet(b.dataset.id,false,null));
   el.querySelectorAll('[data-act="setrename"]').forEach(b=>b.onclick=()=>{ renamingSetId=b.dataset.id; renderDecks(); });
+  [['setexport',exportDeckCSV],['setexportgimkit',exportDeckGimkit],['setexportquizlet',exportDeckQuizlet],['setprint',printDeck]].forEach(([act,fn])=>el.querySelectorAll(`[data-act="${act}"]`).forEach(btn=>btn.onclick=()=>{
+    if(!exportSource(btn.dataset.id).cards.length){ toast('This set has no cards yet.'); return; } fn(btn.dataset.id); }));
   el.querySelectorAll('[data-act="setrenamesave"]').forEach(b=>b.onclick=()=>{
     const inp=el.querySelector(`.renameSetInput[data-id="${b.dataset.id}"]`);
     saveSetRename(b.dataset.id, inp?inp.value:'');
@@ -2312,13 +2320,19 @@ function cardAnswerText(c){
   if(c.type==='fitb') return (c.answers||[]).join(' / ');
   return c.back;
 }
+// A set exports as one combined deck; a deck id works as before.
+function exportSource(id){
+  if(state.decks[id]) return state.decks[id];
+  const s=state.sets[id];
+  return {name:s.name, cards:setDeckIds(s).flatMap(i=>state.decks[i].cards)};
+}
 function exportDeckCSV(id){
-  const d=state.decks[id];
+  const d=exportSource(id);
   const rows=d.cards.map(c=>[c.front, cardAnswerText(c)].map(csvQuote).join(','));
   downloadFile(d.name+'.csv', rows.join('\n'));
 }
 function exportDeckGimkit(id){
-  const d=state.decks[id];
+  const d=exportSource(id);
   const header=['Question','Answer 1','Answer 2','Answer 3','Answer 4','Correct Answer'].map(csvQuote).join(',');
   const rows=d.cards.map(c=>{
     let opts, correct;
@@ -2330,13 +2344,13 @@ function exportDeckGimkit(id){
   downloadFile(d.name+'-gimkit.csv', [header, ...rows].join('\n'));
 }
 function exportDeckQuizlet(id){
-  const d=state.decks[id];
+  const d=exportSource(id);
   const clean=s=>String(s==null?'':s).replace(/[\t\r\n]+/g,' ').trim();
   const rows=d.cards.map(c=>clean(c.front)+'\t'+clean(cardAnswerText(c)));
   downloadFile(d.name+'-quizlet.txt', rows.join('\n'), 'text/plain');
 }
 function printDeck(id){
-  const d=state.decks[id];
+  const d=exportSource(id);
   if(!d.cards.length){ toast('This deck has no cards yet.'); return; }
   const win=window.open('', '_blank');
   if(!win){ toast('Printing was blocked by your browser. Allow pop-ups for this site, then try again.'); return; }
@@ -3505,15 +3519,17 @@ function renderCoach(){
     <section class="card"><div class="block-title">Level ${lv} · ${xp} XP</div><div class="xp-bar"><span style="width:${pct}%"></span></div><p class="sub">${hi-xp} XP to level ${lv+1}. Streak: ${currentStreakCount()} day${currentStreakCount()===1?'':'s'}.</p></section>
     <section class="card"><h2 class="today-title">What do you want to do?</h2>
       <p class="sub">Say it in your own words. You’ll get one small assignment, never a giant pile.</p>
-      <textarea id="coachGoal" placeholder="e.g. “learn 1000 Spanish words this month”, “I want to learn the basics of Spanish”, “go over what I keep forgetting”, “quiz me for 5 minutes”"></textarea>
-      <div class="coach-row"><span class="sub">Time:</span>${[5,10,20].map(m=>`<button class="chip coach-min ${m===10?'on':''}" data-m="${m}">${m} min</button>`).join('')}</div>
+      <textarea id="coachGoal" placeholder="e.g. “learn 1000 Spanish words this month”, “study my biology decks over the next 3 weeks”, “I want to learn the basics of Spanish”, “go over what I keep forgetting”, “quiz me for 5 minutes”"></textarea>
+      <div class="coach-row"><span class="sub">Time:</span>${[5,10,20,30,60].map(m=>`<button class="chip coach-min ${m===coachMins()?'on':''}" data-m="${m}">${fmtMins(m)}</button>`).join('')}<input id="coachCustom" class="coach-custom" placeholder="Custom: 45, 1.5 hr…" value="${[5,10,20,30,60].includes(coachMins())?'':fmtMins(coachMins())}" aria-label="Custom time"></div>
       <div class="today-actions"><button class="btn btn-lg" id="coachGo">${ICONS.sparkle} Give me an assignment</button></div>
       ${hasDecks?`<div class="coach-row"><button class="chip" id="qWeak">My weak spots</button><button class="chip" id="qQuick">Quick warm-up</button></div>`:''}
     </section>
     ${a&&a.items.length?`<section class="card assignment"><div class="block-title">Your assignment</div><h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(a.message)}</p>
       <p class="sub">${a.items.length} cards · about ${Math.max(1,Math.round(a.items.length/3))} min</p><div class="today-actions"><button class="btn btn-lg" id="coachStart">Start</button></div></section>`:''}
   </div>`;
-  let mins=10; el.querySelectorAll('.coach-min').forEach(b=>b.onclick=()=>{ mins=+b.dataset.m; el.querySelectorAll('.coach-min').forEach(x=>x.classList.toggle('on',x===b)); });
+  let mins=coachMins(); const setMins=n=>{ mins=n; state.coachMins=n; saveDecks(); };
+  el.querySelectorAll('.coach-min').forEach(b=>b.onclick=()=>{ setMins(+b.dataset.m); document.getElementById('coachCustom').value=''; el.querySelectorAll('.coach-min').forEach(x=>x.classList.toggle('on',x===b)); });
+  document.getElementById('coachCustom').oninput=e=>{ const n=parseMins(e.target.value); if(n){ setMins(n); el.querySelectorAll('.coach-min').forEach(x=>x.classList.remove('on')); } };
   document.getElementById('coachGo').onclick=()=>{ const g=document.getElementById('coachGoal').value.trim(); if(!g){ toast('Tell me what you want to learn or practice.'); return; } makeAssignment(g,mins); };
   const w=document.getElementById('qWeak'), q=document.getElementById('qQuick');
   if(w) w.onclick=()=>{ const all=[]; Object.keys(state.decks).forEach(id=>state.decks[id].cards.forEach(c=>all.push({cardId:c.id,deckId:id}))); smartSort(all); setAssignment('Your weak spots','These are the cards you miss most. Beating them is the fastest way to improve.',all.slice(0,Math.min(12,mins*3))); };
@@ -3609,6 +3625,89 @@ function plansHtml(){
       <div class="today-actions">${busy?'<button class="btn" disabled>Preparing today’s cards…</button>':`<button class="btn btn-lg" data-plan-go="${p.id}">Start today</button><button class="btn secondary" data-plan-go="${p.id}" data-lim="10">Just 10 cards</button><button class="btn secondary" data-plan-del="${p.id}">Delete</button>`}</div></section>`;
   }).join('');
 }
+/* ===== v4: custom time + reliable month-long plans over one or many decks ===== */
+function parseMins(t){ const m=String(t).toLowerCase().trim().match(/^(\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|m|min|mins|minute|minutes)?$/); if(!m) return 0; let n=+m[1]; if((m[2]||'')[0]==='h') n*=60; return Math.max(1,Math.min(600,Math.round(n))); }
+function fmtMins(m){ return m<60?`${m} min`:m%60?`${Math.floor(m/60)} hr ${m%60} min`:`${m/60} hr`; }
+function coachMins(){ return state.coachMins||10; }
+function detectDays(g){
+  g=g.toLowerCase(); const u={day:1,week:7,month:30,year:365}, w={a:1,one:1,two:2,three:3,four:4,five:5,six:6,couple:2,few:3};
+  let m=g.match(/(\d+(?:\.\d+)?)\s*[- ]?(day|week|month|year)s?/); if(m) return Math.round(+m[1]*u[m[2]]);
+  m=g.match(/\b(a|one|two|three|four|five|six|couple of|few)\s+(day|week|month)s?\b/); if(m) return (w[m[1].split(' ')[0]]||1)*u[m[2]];
+  if(/\bmonth\b/.test(g)) return 30; if(/\bweek\b/.test(g)) return 7; return 0;
+}
+function planDecks(p){ return (p.deckIds||[p.deckId]).map(id=>state.decks[id]).filter(Boolean); }
+function planDeck(p){ return planDecks(p)[0]; }
+function planOfDeck(d){ return (state.plans||[]).find(p=>(p.deckIds||[p.deckId]).includes(d.id)); }
+function planTotal(p){ return p.topics?p.total:planDecks(p).reduce((n,d)=>n+d.cards.length,0); }
+function planPerDay(p){
+  const ds=planDecks(p); if(!ds.length) return 0; const today=dayStr(new Date());
+  const before=ds.reduce((n,d)=>n+d.cards.filter(c=>c.reps>0&&c.introDay!==today).length,0);
+  return Math.max(0,Math.min(p.topics?60:200,Math.ceil((planTotal(p)-before)/Math.max(1,p.days-daysSince(p.start)))));
+}
+function dueCards(d){
+  const now=Date.now(), today=dayStr(new Date()), p=planOfDeck(d);
+  const lim=p?Math.ceil(planPerDay(p)*d.cards.length/Math.max(1,planDecks(p).reduce((n,x)=>n+x.cards.length,0))):NEW_PER_DECK;
+  let room=Math.max(0,lim-d.cards.filter(c=>c.introDay===today).length);
+  return d.cards.filter(c=>{ if(c.reps>0||(c.due&&c.due>now)) return c.due<=now; if(room>0){ room--; return true; } return false; });
+}
+async function coachAsk(goal, minutes, span){
+  return aiJson(`Student goal: "${goal}"\nTime available per session: ${fmtMins(minutes)} (about ${minutes*3} cards).\nTheir decks: ${JSON.stringify(coachDecksSummary())}\n\nReturn {"title":"short assignment name","message":"1-2 encouraging sentences","deckIds":["ids of existing decks that fit the goal, or []"],"count":cards for one session (${Math.max(5,minutes*2)}-${minutes*3}),"newDeck":null or {"name":"","cards":[{"front":"","back":""}]},"plan":null}.\n${span?`The student wants a PLAN spanning ${span} days. Set newDeck null and plan = {"name":"plan name","days":${span},"totalCards":number,"deckIds":["existing deck ids to spread over the days; [] if the goal needs new material"],"topics":["one short topic per day, easy to hard, up to 60 items (only needed when deckIds is [])"]}. Use existing decks whenever they fit the goal.`:'If the goal is a topic their decks don\'t cover, set newDeck with 10 beginner cards and deckIds []. If it spans several days or weeks, set plan as {"name","days","totalCards","deckIds":[],"topics":[]}, otherwise keep plan null.'}`, 3500);
+}
+function createPlan(pl, goal){
+  let ids=(pl.deckIds||[pl.deckId]).filter(id=>id&&state.decks[id]); const gen=!ids.length||!ids.some(id=>state.decks[id].cards.length);
+  const days=Math.max(2,Math.min(90,Math.round(+pl.days)||30));
+  const total=gen?Math.max(10,Math.min(2000,Math.round(+pl.totalCards)||days*10)):0;
+  if(gen) ids=[ensureDeck(pl.name||goal.slice(0,40))];
+  let topics=gen?(pl.topics||[]).map(String).filter(Boolean):null; if(gen&&!topics.length) topics=[goal];
+  const p={id:uid(),name:pl.name||goal.slice(0,40),goal,deckId:ids[0],deckIds:ids,total,days,start:dayStr(new Date()),topics,next:0};
+  state.plans.push(p); saveDecks(); return p;
+}
+async function makeAssignment(goal, minutes){
+  const btn=document.getElementById('coachGo'); if(btn){ btn.disabled=true; btn.textContent='Planning…'; }
+  try{
+    const span=detectDays(goal), r=await coachAsk(goal,minutes,span);
+    if(span>1||(r.plan&&+r.plan.days>1)){
+      const pl=r.plan&&+r.plan.days>1?r.plan:{name:r.title,deckIds:r.deckIds,totalCards:span*Math.max(10,minutes*2)};
+      if(span>1) pl.days=span; if(!pl.deckIds&&pl.deckId) pl.deckIds=[pl.deckId]; if(!(pl.deckIds||[]).length&&r.deckIds&&span>1&&!r.newDeck) pl.deckIds=r.deckIds;
+      const p=createPlan(pl,goal); planBusy=p.id; renderCoach();
+      await ensurePlanCards(p).catch(e=>toast('Plan saved, but today’s cards didn’t generate: '+e.message));
+      planBusy=null; const est=Math.ceil(planPerDay(p)/3);
+      toast(`Plan ready: ${planTotal(p)} cards over ${p.days} days (about ${fmtMins(est)} a day).`+(est>minutes*1.5?' That’s more than your chosen time. Try more days or fewer cards.':''),'success'); renderCoach(); return;
+    }
+    let ids=(r.deckIds||[]).filter(id=>state.decks[id]);
+    if(r.newDeck&&Array.isArray(r.newDeck.cards)&&r.newDeck.cards.length){
+      const id=ensureDeck(r.newDeck.name||goal.slice(0,40));
+      r.newDeck.cards.forEach(c=>{ if(c.front&&c.back) state.decks[id].cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),interval:0,ease:2.5,due:0,reps:0}); });
+      saveDecks(); ids=[id];
+    }
+    if(!ids.length) ids=Object.keys(state.decks);
+    setAssignment(r.title||'Today’s assignment', r.message||'Let’s do a few cards.', buildAssignment(ids,Math.max(3,Math.min(minutes*3,400,Number(r.count)||minutes*2))));
+  }catch(e){ planBusy=null; toast('Couldn’t reach the coach: '+(e.message||'error')); renderCoach(); }
+}
+async function startPlan(id, limit){
+  const p=state.plans.find(x=>x.id===id); if(!p||!planDeck(p)) return;
+  planBusy=id; renderCoach();
+  try{ await ensurePlanCards(p); }catch(e){ toast('Couldn’t make today’s cards: '+e.message); }
+  planBusy=null; renderCoach();
+  const items=planDecks(p).flatMap(d=>dueCards(d).map(c=>({cardId:c.id,deckId:d.id}))); smartSort(items);
+  if(!items.length){ toast('You’re finished for today. Nice work! 🎉'); return; }
+  startQueue(items.slice(0,limit||Math.max(80,planPerDay(p)+50)), p.name);
+}
+function plansHtml(){
+  return state.plans.map(p=>{
+    const ds=planDecks(p); if(!ds.length) return '';
+    const total=planTotal(p), intro=ds.reduce((n,d)=>n+d.cards.filter(c=>c.reps>0).length,0), pct=Math.min(100,Math.round(100*intro/Math.max(1,total))), di=daysSince(p.start), busy=planBusy===p.id;
+    const base=Math.ceil(total/p.days), rows=Array.from({length:p.days},(_,i)=>{ const dt=new Date(p.start+'T00:00'); dt.setDate(dt.getDate()+i);
+      const t=p.topics?p.topics[Math.min(p.topics.length-1,Math.floor(i*p.topics.length/p.days))]:`about ${base} new cards`;
+      return `<li${i===di?' style="font-weight:700"':''}>${i<di?'✓ ':''}${dt.toLocaleDateString(undefined,{month:'short',day:'numeric'})} · ${escapeHtml(t)}</li>`; }).join('');
+    return `<section class="card plan"><div class="block-title">Plan · day ${Math.min(p.days,di+1)} of ${p.days}</div><h3>${escapeHtml(p.name)}</h3><div class="xp-bar"><span style="width:${pct}%"></span></div>
+      <p class="sub">${intro} of ${total} cards learned · about ${planPerDay(p)} new today (≈${fmtMins(Math.max(1,Math.ceil(planPerDay(p)/3)))}). Miss a day and the rest spreads out automatically.</p>
+      ${intro>=total&&total?'<p>🎉 Plan complete! Keep reviewing to lock it in.</p>':''}
+      <div class="today-actions">${busy?'<button class="btn" disabled>Preparing today’s cards…</button>':`<button class="btn btn-lg" data-plan-go="${p.id}">Start today</button><button class="btn secondary" data-plan-go="${p.id}" data-lim="10">Just 10 cards</button><button class="btn secondary" data-plan-del="${p.id}">Delete</button>`}</div>
+      <details class="plan-days"><summary>See the whole schedule</summary><ol>${rows}</ol></details></section>`;
+  }).join('');
+}
+
 const _renderCoach=renderCoach;
 renderCoach=function(){
   _renderCoach();
