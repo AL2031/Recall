@@ -1470,6 +1470,20 @@ th { position: sticky; top: 0; background: var(--surface-2); color: var(--sub); 
   border-color: var(--red-shadow);
   color: #FFFFFF;
 }
+.coach{display:grid;gap:16px;max-width:720px;margin:0 auto}
+.coach textarea{width:100%;min-height:84px;margin:10px 0}
+.coach-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.coach .chip{cursor:pointer;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);padding:6px 12px;border-radius:99px;font:inherit}
+.coach .chip.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.xp-bar{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin:8px 0;border:1px solid var(--line)}
+.xp-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--green));transition:width .5s}
+.assignment{border:2px solid var(--accent-line);background:var(--accent-soft)}
+.recap{text-align:center;margin-bottom:16px;border:2px solid var(--accent-line);background:var(--accent-soft)}
+.xp-pop{position:fixed;left:50%;top:38%;transform:translateX(-50%);font:700 22px var(--font-ui);color:var(--green);pointer-events:none;z-index:99;animation:xpup 1.1s ease-out forwards;text-shadow:0 2px 10px var(--bg)}
+@keyframes xpup{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-70px)}}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:99;pointer-events:none;animation:fall 2s ease-in forwards}
+@keyframes fall{to{top:105vh;opacity:.4}}
+@media (prefers-reduced-motion:reduce){.xp-pop,.confetti{animation-duration:.01s}}
 </style>
 </head>
 <body>
@@ -1479,6 +1493,7 @@ th { position: sticky; top: 0; background: var(--surface-2); color: var(--sub); 
     <h1>Recall</h1>
   </div>
   <nav id="tabs">
+    <button data-tab="coach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3"/></svg><span>Coach</span></button>
     <button data-tab="study" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2Z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7Z"/></svg>Study</button>
     <button data-tab="decks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Decks</button>
     <button data-tab="import"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.6 4.4 0 0 1-1.3-8.9A5 5 0 0 1 15.9 7a4.5 4.5 0 0 1 2.1 8.6"/><polyline points="9 15 12 12 15 15"/><line x1="12" y1="12" x2="12" y2="21"/></svg>Import</button>
@@ -1494,6 +1509,7 @@ th { position: sticky; top: 0; background: var(--surface-2); color: var(--sub); 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="modalRoot"></div>
 <main>
+  <div id="tab-coach" class="hidden"></div>
   <div id="tab-study"></div>
   <div id="tab-decks" class="hidden"></div>
   <div id="tab-import" class="hidden"></div>
@@ -1608,7 +1624,7 @@ function buildStudyPool(deckIds, includeAll){
 function startSession(deckIds, includeAll=false, limit=null){
   const pool=buildStudyPool(deckIds, includeAll);
   if(!pool.length){ toast(deckIds.length>1?'Nothing is due right now.':'Nothing is due in this deck right now.'); return; }
-  pool.sort((a,b)=>a.due-b.due); // most overdue / longest-waiting cards first
+  smartSort(pool); // weakest and most overdue cards first
   const capped = limit ? pool.slice(0, limit) : pool;
   const queue=shuffle(capped.map(p=>({cardId:p.cardId, deckId:p.deckId})));
   studySession={deckId: deckIds.length===1?deckIds[0]:null, mixed: deckIds.length>1, queue, pos:0, showBack:false, selected:null, optionOrder:null, typed:'', total:queue.length, undo:null};
@@ -1767,7 +1783,7 @@ function renderStudy(){
 }
 function advanceCard(card, rating){
   const qi=studySession.queue[studySession.pos];
-  studySession.undo={cardId:card.id, deckId:qi.deckId, pos:studySession.pos, prev:{interval:card.interval, ease:card.ease, due:card.due, reps:card.reps}};
+  studySession.undo={cardId:card.id, deckId:qi.deckId, pos:studySession.pos, prev:{interval:card.interval, ease:card.ease, due:card.due, reps:card.reps, lapses:card.lapses, rl:card.rl, introDay:card.introDay}};
   schedule(card, rating); saveDecks();
   bumpStreak();
   studySession.pos++; studySession.showBack=false; studySession.selected=null; studySession.optionOrder=null; studySession.typed='';
@@ -1777,7 +1793,7 @@ function undoLastGrade(){
   const u=studySession && studySession.undo; if(!u) return;
   const deck=state.decks[u.deckId]; if(!deck){ return; }
   const card=deck.cards.find(c=>c.id===u.cardId); if(!card) return;
-  card.interval=u.prev.interval; card.ease=u.prev.ease; card.due=u.prev.due; card.reps=u.prev.reps;
+  card.interval=u.prev.interval; card.ease=u.prev.ease; card.due=u.prev.due; card.reps=u.prev.reps; card.lapses=u.prev.lapses; card.rl=u.prev.rl; card.introDay=u.prev.introDay;
   saveDecks();
   studySession.pos=u.pos; studySession.showBack=false; studySession.selected=null; studySession.optionOrder=null; studySession.typed=''; studySession.undo=null;
   toast('Last answer undone.');
@@ -3369,7 +3385,240 @@ function setupGlobalUX(){
     }
   });
 }
-const renderers={study:renderStudy, decks:renderDecks, import:renderImport, ai:renderAI};
+/* ===== v2: smarter scheduling, XP/fun, AI Coach ===== */
+const DAYMS=864e5, NEW_PER_DECK=10;
+state.xp=state.xp||0;
+function levelOf(xp){ return Math.floor(Math.sqrt(xp/40))+1; }
+function cardOf(p){ const d=state.decks[p.deckId]; return d&&d.cards.find(c=>c.id===p.cardId); }
+function schedule(card, rating, dry){
+  const MIN=6e4,HR=36e5,DAY=DAYMS, old=card.interval||0;
+  let ease=card.ease==null?2.5:card.ease, iv=old;
+  if(rating===0){
+    ease=Math.max(1.3,ease-0.2); card.lapses=(card.lapses||0)+1;
+    if(old>=DAY) card.rl=Math.round(old*0.4);   // remember most of what you knew
+    iv=10*MIN;
+  } else if(card.rl){ iv=Math.round(card.rl*(rating===1?0.8:rating===2?1:1.5)); card.rl=0; }
+  else if(old<DAY){ iv= rating===1?(old?DAY:8*HR) : rating===2?(old?2*DAY:DAY) : 4*DAY; }
+  else iv=Math.round(old*(rating===1?1.2:rating===2?ease:ease*1.3));
+  if(rating===1) ease=Math.max(1.3,ease-0.15);
+  if(rating===3) ease=Math.min(3.0,ease+0.15);
+  if(!dry && iv>3*DAY) iv=Math.round(iv*(0.95+Math.random()*0.1)); // fuzz so cards don't clump
+  if(!dry && !(card.reps>0)) card.introDay=dayStr(new Date());
+  card.ease=ease; card.interval=iv; card.due=Date.now()+iv; card.reps=(card.reps||0)+1;
+}
+function gradeIntervalLabel(card, rating){
+  const c={...card}; schedule(c,rating,true); const ms=c.interval, MIN=6e4,HR=36e5;
+  if(ms<HR) return `${Math.max(1,Math.round(ms/MIN))}m`;
+  if(ms<DAYMS) return `${Math.max(1,Math.round(ms/HR))}h`;
+  return `${Math.max(1,Math.round(ms/DAYMS))}d`;
+}
+// Brand-new cards are rationed (10 per deck per day) so a big import never means a giant "due" pile.
+function dueCards(d){
+  const now=Date.now(), today=dayStr(new Date());
+  let room=Math.max(0,NEW_PER_DECK-d.cards.filter(c=>c.introDay===today).length);
+  return d.cards.filter(c=>{ if(c.reps>0||c.due>now&&c.due) return c.due<=now; if(room>0){ room--; return true; } return false; });
+}
+function weakness(c){ const od=c.due?Math.max(0,Date.now()-c.due)/Math.max(c.interval||DAYMS,DAYMS):0.5; return od+(2.5-(c.ease==null?2.5:c.ease))+(c.lapses||0)*0.3; }
+function smartSort(pool){ pool.sort((a,b)=>weakness(cardOf(b)||{})-weakness(cardOf(a)||{})); }
+function startQueue(items, label){
+  const queue=shuffle(items.map(p=>({cardId:p.cardId,deckId:p.deckId})));
+  if(!queue.length){ toast('No cards available for that yet.'); return; }
+  studySession={deckId:null,mixed:true,queue,pos:0,showBack:false,selected:null,optionOrder:null,typed:'',total:queue.length,undo:null,stats:{xp:0,good:0,again:0,combo:0,best:0},label};
+  switchTab('study'); renderStudy();
+}
+function buildAssignment(deckIds, count){
+  let due=[], rest=[];
+  deckIds.forEach(id=>{ const d=state.decks[id]; if(!d) return; const dueIds=new Set(dueCards(d).map(c=>c.id));
+    d.cards.forEach(c=>(dueIds.has(c.id)?due:rest).push({cardId:c.id,deckId:id})); });
+  smartSort(due); smartSort(rest);
+  return due.concat(rest).slice(0,count);
+}
+// --- fun layer: XP, combo, level-ups, retry-until-right, session summary ---
+const _advance=advanceCard;
+advanceCard=function(card, rating){
+  const s=studySession, qi=s.queue[s.pos]; s.stats=s.stats||{xp:0,good:0,again:0,combo:0,best:0};
+  _advance(card, rating);
+  const st=s.stats, before=levelOf(state.xp);
+  if(rating===0){ st.again++; st.combo=0; s.queue.splice(Math.min(s.queue.length,s.pos+3),0,{cardId:qi.cardId,deckId:qi.deckId}); }
+  else { st.good++; st.combo++; st.best=Math.max(st.best,st.combo); }
+  const gain=Math.round([2,5,10,12][rating]*(1+Math.min(st.combo,10)*0.1));
+  state.xp+=gain; st.xp+=gain; saveDecks(); updateXp(); popXp(gain, st.combo);
+  if(card.lapses>=5 && !card.leech){ card.leech=true; saveDecks(); toast('That card keeps slipping. Try rewording it so it’s easier to remember.'); }
+  if(levelOf(state.xp)>before){ toast(`Level up! You’re now level ${levelOf(state.xp)} 🎉`,'success'); confetti(); }
+};
+function updateXp(){
+  let el=document.getElementById('headerXp');
+  if(!el){ el=document.createElement('div'); el.id='headerXp'; el.className='header-streak'; document.querySelector('.header-actions').prepend(el); }
+  el.textContent=`⭐ Lv ${levelOf(state.xp)} · ${state.xp} XP`;
+}
+function popXp(n, combo){
+  const p=document.createElement('div'); p.className='xp-pop'; p.textContent=`+${n} XP${combo>=3?`  🔥 ${combo} in a row`:''}`;
+  document.body.appendChild(p); setTimeout(()=>p.remove(),1100);
+}
+function confetti(){
+  const cols=['#E4696A','#2243C9','#1E8759','#F0B44C','#8AA0FF'];
+  for(let i=0;i<36;i++){ const e=document.createElement('i'); e.className='confetti';
+    e.style.cssText=`left:${Math.random()*100}vw;background:${cols[i%5]};animation-delay:${Math.random()*.4}s;transform:rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(e); setTimeout(()=>e.remove(),2400); }
+}
+const _renderStudy=renderStudy;
+renderStudy=function(){
+  _renderStudy();
+  const s=studySession, el=document.getElementById('tab-study');
+  if(s && s.pos>=s.queue.length && s.stats && !el.querySelector('.recap')){
+    const t=s.stats.good+s.stats.again, acc=t?Math.round(100*s.stats.good/t):0;
+    const msg=acc>=90?'Crushed it.':acc>=70?'Solid work. The tricky ones will come back sooner.':'Tough set, and that’s how things stick. The missed cards return soon.';
+    el.insertAdjacentHTML('afterbegin',`<div class="card recap"><h3>${msg}</h3><p class="sub">${acc}% right · <b>+${s.stats.xp} XP</b> · best streak ${s.stats.best} · Level ${levelOf(state.xp)}</p></div>`);
+    if(acc>=70) confetti(); s.stats=null;
+  }
+};
+// --- AI Coach: say what you want, get a small assignment ---
+function coachDecksSummary(){ return Object.values(state.decks).map(d=>({id:d.id,name:d.name,cards:d.cards.length,due:dueCards(d).length,weak:d.cards.filter(c=>(c.lapses||0)>=2||(c.ease||2.5)<2).length})); }
+async function coachAsk(goal, minutes){
+  const sys='You are a warm, practical study coach. Reply with ONLY a JSON object, no markdown.';
+  const prompt=`Student goal: "${goal}"\nTime available: ${minutes} minutes (about ${minutes*3} cards).\nTheir decks: ${JSON.stringify(coachDecksSummary())}\n\nReturn {"title":"short assignment name","message":"1-2 encouraging sentences saying what to do and why","deckIds":["ids of existing decks that fit the goal, or []"],"count":number of cards (${Math.max(5,minutes*2)}-${minutes*3}),"newDeck":null or {"name":"deck name","cards":[{"front":"question","back":"answer"}]}}.\nIf the goal is a topic their decks don't cover, set newDeck with 10 clear beginner-friendly cards (build from basics) and deckIds []. Never assign everything; keep it small and doable.`;
+  const resp=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages:[{role:'system',content:sys},{role:'user',content:prompt}],temperature:0.4,max_completion_tokens:3000,reasoning_effort:'low',include_reasoning:false,response_format:{type:'json_object'}})});
+  const data=await resp.json().catch(()=>({}));
+  if(!resp.ok) throw new Error(typeof data.error==='string'?data.error:'The AI is busy. Try again in a moment.');
+  const raw=(data.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim();
+  return JSON.parse(raw.slice(raw.indexOf('{'),raw.lastIndexOf('}')+1));
+}
+async function makeAssignment(goal, minutes){
+  const btn=document.getElementById('coachGo'); if(btn){ btn.disabled=true; btn.textContent='Thinking…'; }
+  try{
+    const r=await coachAsk(goal, minutes); let ids=(r.deckIds||[]).filter(id=>state.decks[id]);
+    if(r.newDeck&&Array.isArray(r.newDeck.cards)&&r.newDeck.cards.length){
+      const id=ensureDeck(r.newDeck.name||goal.slice(0,40));
+      r.newDeck.cards.forEach(c=>{ if(c.front&&c.back) state.decks[id].cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),interval:0,ease:2.5,due:0,reps:0}); });
+      saveDecks(); ids=[id];
+    }
+    if(!ids.length) ids=Object.keys(state.decks);
+    const count=Math.max(3,Math.min(30,Number(r.count)||minutes*2));
+    setAssignment(r.title||'Today’s assignment', r.message||'Let’s do a few cards.', buildAssignment(ids,count));
+  }catch(e){ toast('Couldn’t reach the coach: '+(e.message||'error')); renderCoach(); }
+}
+function setAssignment(title,message,items){ state.coach={title,message,items,made:Date.now()}; saveDecks(); renderCoach(); }
+function renderCoach(){
+  const el=document.getElementById('tab-coach'), xp=state.xp, lv=levelOf(xp), lo=40*(lv-1)**2, hi=40*lv**2, pct=Math.round(100*(xp-lo)/(hi-lo));
+  const a=state.coach, hasDecks=Object.keys(state.decks).length>0;
+  el.innerHTML=`<div class="coach">
+    <section class="card"><div class="block-title">Level ${lv} · ${xp} XP</div><div class="xp-bar"><span style="width:${pct}%"></span></div><p class="sub">${hi-xp} XP to level ${lv+1}. Streak: ${currentStreakCount()} day${currentStreakCount()===1?'':'s'}.</p></section>
+    <section class="card"><h2 class="today-title">What do you want to do?</h2>
+      <p class="sub">Say it in your own words. You’ll get one small assignment, never a giant pile.</p>
+      <textarea id="coachGoal" placeholder="e.g. “learn 1000 Spanish words this month”, “I want to learn the basics of Spanish”, “go over what I keep forgetting”, “quiz me for 5 minutes”"></textarea>
+      <div class="coach-row"><span class="sub">Time:</span>${[5,10,20].map(m=>`<button class="chip coach-min ${m===10?'on':''}" data-m="${m}">${m} min</button>`).join('')}</div>
+      <div class="today-actions"><button class="btn btn-lg" id="coachGo">${ICONS.sparkle} Give me an assignment</button></div>
+      ${hasDecks?`<div class="coach-row"><button class="chip" id="qWeak">My weak spots</button><button class="chip" id="qQuick">Quick warm-up</button></div>`:''}
+    </section>
+    ${a&&a.items.length?`<section class="card assignment"><div class="block-title">Your assignment</div><h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(a.message)}</p>
+      <p class="sub">${a.items.length} cards · about ${Math.max(1,Math.round(a.items.length/3))} min</p><div class="today-actions"><button class="btn btn-lg" id="coachStart">Start</button></div></section>`:''}
+  </div>`;
+  let mins=10; el.querySelectorAll('.coach-min').forEach(b=>b.onclick=()=>{ mins=+b.dataset.m; el.querySelectorAll('.coach-min').forEach(x=>x.classList.toggle('on',x===b)); });
+  document.getElementById('coachGo').onclick=()=>{ const g=document.getElementById('coachGoal').value.trim(); if(!g){ toast('Tell me what you want to learn or practice.'); return; } makeAssignment(g,mins); };
+  const w=document.getElementById('qWeak'), q=document.getElementById('qQuick');
+  if(w) w.onclick=()=>{ const all=[]; Object.keys(state.decks).forEach(id=>state.decks[id].cards.forEach(c=>all.push({cardId:c.id,deckId:id}))); smartSort(all); setAssignment('Your weak spots','These are the cards you miss most. Beating them is the fastest way to improve.',all.slice(0,Math.min(12,mins*3))); };
+  if(q) q.onclick=()=>setAssignment('Quick warm-up','Five minutes, a handful of cards. That keeps your streak alive.',buildAssignment(Object.keys(state.decks),8));
+  const s=document.getElementById('coachStart'); if(s) s.onclick=()=>startQueue(a.items.filter(p=>cardOf(p)),a.title);
+}
+updateXp();
+
+/* ===== v3: multi-day plans (e.g. 1,000 cards over a month) ===== */
+state.plans=state.plans||[];
+let planBusy=null;
+function daysSince(day){ return Math.max(0,Math.round((new Date(dayStr(new Date())+'T00:00')-new Date(day+'T00:00'))/DAYMS)); }
+function planDeck(p){ return state.decks[p.deckId]; }
+function planOfDeck(d){ return (state.plans||[]).find(p=>p.deckId===d.id); }
+// New cards per day = what's left divided by days left, so missing a day spreads the work out instead of piling it up.
+function planPerDay(p){
+  const d=planDeck(p); if(!d) return 0; const today=dayStr(new Date());
+  const before=d.cards.filter(c=>c.reps>0&&c.introDay!==today).length;
+  return Math.max(0,Math.min(60,Math.ceil((p.total-before)/Math.max(1,p.days-daysSince(p.start)))));
+}
+function dueCards(d){
+  const now=Date.now(), today=dayStr(new Date()), p=planOfDeck(d), lim=p?planPerDay(p):NEW_PER_DECK;
+  let room=Math.max(0,lim-d.cards.filter(c=>c.introDay===today).length);
+  return d.cards.filter(c=>{ if(c.reps>0||(c.due&&c.due>now)) return c.due<=now; if(room>0){ room--; return true; } return false; });
+}
+async function aiJson(prompt, tokens){
+  const resp=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages:[{role:'system',content:'You are a warm, practical study coach. Reply with ONLY a JSON object, no markdown.'},{role:'user',content:prompt}],temperature:0.4,max_completion_tokens:tokens,reasoning_effort:'low',include_reasoning:false,response_format:{type:'json_object'}})});
+  const data=await resp.json().catch(()=>({}));
+  if(!resp.ok) throw new Error(typeof data.error==='string'?data.error:'The AI is busy. Try again in a moment.');
+  const raw=(data.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim();
+  return JSON.parse(raw.slice(raw.indexOf('{'),raw.lastIndexOf('}')+1));
+}
+async function coachAsk(goal, minutes){
+  return aiJson(`Student goal: "${goal}"\nTime available today: ${minutes} minutes (about ${minutes*3} cards).\nTheir decks: ${JSON.stringify(coachDecksSummary())}\n\nReturn {"title":"short assignment name","message":"1-2 encouraging sentences","deckIds":["ids of existing decks that fit, or []"],"count":cards for today (${Math.max(5,minutes*2)}-${minutes*3}),"newDeck":null or {"name":"","cards":[{"front":"","back":""}]},"plan":null}.\nIf the goal is a topic their decks don't cover, set newDeck with 10 beginner-friendly cards and deckIds [].\nIf the goal spans several days or weeks (e.g. "1000 words in a month", "by next Friday", "over 3 weeks"), set newDeck null, deckIds [] and plan = {"name":"plan name","days":number of days,"totalCards":number,"deckId":"id of an existing deck to spread out, or null to create new cards","topics":["one short topic per day, in learning order, easy to hard, up to 60 items"]}.\nOtherwise keep plan null and keep today's count small.`, 3500);
+}
+async function genPlanCards(p, n){
+  const d=planDeck(p), topic=p.topics[Math.min(p.next||0,p.topics.length-1)]||p.goal, seen=new Set(d.cards.map(c=>c.front.toLowerCase()));
+  const r=await aiJson(`Goal: "${p.goal}". Today's topic: "${topic}". Write exactly ${n} new flashcards on this topic, ordered easy to hard, with short fronts and concise answers. Return {"cards":[{"front":"","back":""}]}. Do not repeat any of these: ${d.cards.slice(-60).map(c=>c.front).join(' | ')}`, 4000);
+  (r.cards||[]).forEach(c=>{ if(c.front&&c.back&&!seen.has(String(c.front).toLowerCase())) d.cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),interval:0,ease:2.5,due:0,reps:0}); });
+  p.next=(p.next||0)+1; saveDecks();
+}
+// Generate only as many cards as today needs, so a 1,000-card plan is ~35 cards per day, made on demand.
+async function ensurePlanCards(p){
+  if(!p.topics) return; const d=planDeck(p), today=dayStr(new Date());
+  const have=d.cards.filter(c=>!(c.reps>0)||c.introDay===today).length;
+  const n=Math.min(40, planPerDay(p)-have, p.total-d.cards.length);
+  if(n>0) await genPlanCards(p,n);
+}
+function createPlan(pl, goal){
+  let deckId=pl.deckId&&state.decks[pl.deckId]?pl.deckId:null; const gen=!deckId;
+  const days=Math.max(2,Math.min(90,Math.round(+pl.days)||30));
+  const total=gen?Math.max(10,Math.min(2000,Math.round(+pl.totalCards)||days*10)):state.decks[deckId].cards.length;
+  if(gen) deckId=ensureDeck(pl.name||goal.slice(0,40));
+  let topics=gen?(pl.topics||[]).map(String).filter(Boolean):null; if(gen&&!topics.length) topics=[goal];
+  const p={id:uid(),name:pl.name||goal.slice(0,40),goal,deckId,total,days,start:dayStr(new Date()),topics,next:0};
+  state.plans.push(p); saveDecks(); return p;
+}
+async function makeAssignment(goal, minutes){
+  const btn=document.getElementById('coachGo'); if(btn){ btn.disabled=true; btn.textContent='Planning…'; }
+  try{
+    const r=await coachAsk(goal, minutes);
+    if(r.plan&&+r.plan.days>1){
+      const p=createPlan(r.plan,goal); planBusy=p.id; renderCoach();
+      await ensurePlanCards(p).catch(e=>toast('Plan saved, but today’s cards didn’t generate: '+e.message));
+      planBusy=null; toast(`Plan ready: ${p.total} cards over ${p.days} days.`,'success'); renderCoach(); return;
+    }
+    let ids=(r.deckIds||[]).filter(id=>state.decks[id]);
+    if(r.newDeck&&Array.isArray(r.newDeck.cards)&&r.newDeck.cards.length){
+      const id=ensureDeck(r.newDeck.name||goal.slice(0,40));
+      r.newDeck.cards.forEach(c=>{ if(c.front&&c.back) state.decks[id].cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),interval:0,ease:2.5,due:0,reps:0}); });
+      saveDecks(); ids=[id];
+    }
+    if(!ids.length) ids=Object.keys(state.decks);
+    setAssignment(r.title||'Today’s assignment', r.message||'Let’s do a few cards.', buildAssignment(ids,Math.max(3,Math.min(30,Number(r.count)||minutes*2))));
+  }catch(e){ planBusy=null; toast('Couldn’t reach the coach: '+(e.message||'error')); renderCoach(); }
+}
+async function startPlan(id, limit){
+  const p=state.plans.find(x=>x.id===id); if(!p||!planDeck(p)) return;
+  planBusy=id; renderCoach();
+  try{ await ensurePlanCards(p); }catch(e){ toast('Couldn’t make today’s cards: '+e.message); }
+  planBusy=null; renderCoach();
+  const d=planDeck(p), items=dueCards(d).map(c=>({cardId:c.id,deckId:d.id})); smartSort(items);
+  if(!items.length){ toast('You’re finished for today. Nice work! 🎉'); return; }
+  startQueue(items.slice(0,limit||80), p.name);
+}
+function plansHtml(){
+  return state.plans.map(p=>{
+    const d=planDeck(p); if(!d) return '';
+    const intro=d.cards.filter(c=>c.reps>0).length, pct=Math.min(100,Math.round(100*intro/p.total)), day=Math.min(p.days,daysSince(p.start)+1), busy=planBusy===p.id;
+    return `<section class="card plan"><div class="block-title">Plan · day ${day} of ${p.days}</div><h3>${escapeHtml(p.name)}</h3><div class="xp-bar"><span style="width:${pct}%"></span></div>
+      <p class="sub">${intro} of ${p.total} cards learned · about ${planPerDay(p)} new today. Miss a day and the rest spreads out automatically.</p>
+      ${intro>=p.total?'<p>🎉 Plan complete! Keep reviewing to lock it in.</p>':''}
+      <div class="today-actions">${busy?'<button class="btn" disabled>Preparing today’s cards…</button>':`<button class="btn btn-lg" data-plan-go="${p.id}">Start today</button><button class="btn secondary" data-plan-go="${p.id}" data-lim="10">Just 10 cards</button><button class="btn secondary" data-plan-del="${p.id}">Delete</button>`}</div></section>`;
+  }).join('');
+}
+const _renderCoach=renderCoach;
+renderCoach=function(){
+  _renderCoach();
+  const el=document.getElementById('tab-coach'), html=plansHtml();
+  if(html) el.querySelectorAll('.coach > section')[1].insertAdjacentHTML('afterend',html);
+  el.querySelectorAll('[data-plan-go]').forEach(b=>b.onclick=()=>startPlan(b.dataset.planGo,b.dataset.lim?+b.dataset.lim:null));
+  el.querySelectorAll('[data-plan-del]').forEach(b=>b.onclick=()=>showConfirm('Delete this plan?','Your cards and progress stay in the deck. Only the schedule is removed.',()=>{ state.plans=state.plans.filter(p=>p.id!==b.dataset.planDel); saveDecks(); renderCoach(); }));
+};
+
+const renderers={coach:renderCoach, study:renderStudy, decks:renderDecks, import:renderImport, ai:renderAI};
 document.getElementById('tabs').addEventListener('click', e=>{
   const b=e.target.closest('button[data-tab]'); if(!b) return;
   document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
@@ -3378,7 +3627,7 @@ document.getElementById('tabs').addEventListener('click', e=>{
   renderers[b.dataset.tab]();
 });
 setupGlobalUX();
-const initialTab=localStorage.getItem('recall_tab') || 'study';
+const initialTab=localStorage.getItem('recall_tab') || 'coach';
 const initialBtn=document.querySelector(`#tabs button[data-tab="${initialTab}"]`) || document.querySelector('#tabs button[data-tab="study"]');
 initialBtn.click();
 </script>
