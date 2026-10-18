@@ -1472,6 +1472,9 @@ th { position: sticky; top: 0; background: var(--surface-2); color: var(--sub); 
 }
 .coach{display:grid;gap:16px;max-width:720px;margin:0 auto}
 .coach textarea{width:100%;min-height:84px;margin:10px 0}
+.explain-box{margin:14px 0;padding:12px 14px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:var(--r-md)}
+.explain-box p{margin:4px 0 0}
+.explain-btn{display:block;margin:12px auto}
 .coach-custom{width:150px;padding:6px 10px;border-radius:99px}
 .plan-days ol{max-height:260px;overflow:auto;padding-left:22px;margin:8px 0}
 .coach-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
@@ -2035,6 +2038,7 @@ function setRowHtml(s){
         <button class="menu-item" data-act="setexportgimkit" data-id="${s.id}">${ICONS.download} Export set for Gimkit</button>
         <button class="menu-item" data-act="setexportquizlet" data-id="${s.id}">${ICONS.download} Export set for Quizlet</button>
         <button class="menu-item" data-act="setprint" data-id="${s.id}">${ICONS.print} Print set flashcards</button>
+        <button class="menu-item" data-act="setexplain" data-id="${s.id}">${ICONS.sparkle} Add explanations to set (${exportSource(s.id).cards.filter(c=>!c.explain).length} missing)</button>
         <div class="menu-sep"></div>
         <button class="menu-item danger" data-act="setdel" data-id="${s.id}">${ICONS.trash} Delete set</button></div></details>
     </div></div>
@@ -2107,7 +2111,7 @@ function renderDecks(){
   }
   el.querySelectorAll('[data-act="setstudy"]').forEach(b=>b.onclick=()=>startStudySet(b.dataset.id,false,null));
   el.querySelectorAll('[data-act="setrename"]').forEach(b=>b.onclick=()=>{ renamingSetId=b.dataset.id; renderDecks(); });
-  [['setexport',exportDeckCSV],['setexportgimkit',exportDeckGimkit],['setexportquizlet',exportDeckQuizlet],['setprint',printDeck]].forEach(([act,fn])=>el.querySelectorAll(`[data-act="${act}"]`).forEach(btn=>btn.onclick=()=>{
+  [['setexport',exportDeckCSV],['setexportgimkit',exportDeckGimkit],['setexportquizlet',exportDeckQuizlet],['setprint',printDeck],['setexplain',addExplanations]].forEach(([act,fn])=>el.querySelectorAll(`[data-act="${act}"]`).forEach(btn=>btn.onclick=()=>{
     if(!exportSource(btn.dataset.id).cards.length){ toast('This set has no cards yet.'); return; } fn(btn.dataset.id); }));
   el.querySelectorAll('[data-act="setrenamesave"]').forEach(b=>b.onclick=()=>{
     const inp=el.querySelector(`.renameSetInput[data-id="${b.dataset.id}"]`);
@@ -2161,6 +2165,7 @@ function renderDecks(){
       <button class="menu-item" data-act="exportgimkit" data-id="${d.id}" title="Question, Answer 1-4, Correct Answer — the layout Gimkit/Kahoot/Quizizz-style spreadsheet imports expect">${ICONS.download} Export for Gimkit</button>
       <button class="menu-item" data-act="exportquizlet" data-id="${d.id}" title="Tab-separated term/definition — paste straight into Quizlet's import screen">${ICONS.download} Export for Quizlet</button>
       <button class="menu-item" data-act="print" data-id="${d.id}" title="Print flashcards">${ICONS.print} Print flashcards</button>
+      <button class="menu-item" data-act="explain" data-id="${d.id}" title="Use AI to write a short explanation for each card that lacks one">${ICONS.sparkle} Add explanations (${d.cards.filter(c=>!c.explain).length} missing)</button>
       <div class="menu-sep"></div>
       <button class="menu-item danger" data-act="del" data-id="${d.id}">${ICONS.trash} Delete deck</button></div></details>
     </div></div>
@@ -2309,6 +2314,7 @@ function renderDecks(){
   wrap.querySelectorAll('[data-act="exportgimkit"]').forEach(b=>b.onclick=()=>exportDeckGimkit(b.dataset.id));
   wrap.querySelectorAll('[data-act="exportquizlet"]').forEach(b=>b.onclick=()=>exportDeckQuizlet(b.dataset.id));
   wrap.querySelectorAll('[data-act="print"]').forEach(b=>b.onclick=()=>printDeck(b.dataset.id));
+  wrap.querySelectorAll('[data-act="explain"]').forEach(b=>b.onclick=()=>addExplanations(b.dataset.id));
 }
 function csvQuote(v){ return '"' + String(v==null?'':v).replace(/"/g,'""') + '"'; }
 function downloadFile(filename, content, mime){
@@ -3082,6 +3088,7 @@ function renderAI(){
         <div><label for="aiCountMax">Maximum</label><input type="number" id="aiCountMax" min="${MIN_CARDS}" max="${MAX_CARDS}" step="1" value="20" inputmode="numeric"></div>
       </div>
       <p class="count-hint" id="aiCountHint"></p>
+      <label class="check-card"><input type="checkbox" id="aiExplain"><span><strong>Add an explanation to every card</strong><span class="hint" style="display:block;">Takes a little longer. Each card gets a short “why”, shown after you answer.</span></span></label>
       <label class="check-card"><input type="checkbox" id="aiAllowExpansion"><span><strong>Allow related knowledge to fill the requested count</strong><span class="hint" style="display:block;">Off by default: cards must be supported by your notes or files. Turn it on for extra facts from general subject knowledge. Exact counts can’t be guaranteed from a short source without repetition or unsupported claims.</span></span></label>
 
       <h3 class="block-title sep">Destination</h3>
@@ -3290,6 +3297,7 @@ Return ONLY JSON: {"cards":[{"front":"...","back":"..."}]}.`;
       if(!cards.length && run.fatal) throw run.fatal;
       if(!cards.length) throw genError('empty');
 
+      if(document.getElementById('aiExplain')?.checked){ try{ await explainCards(cards,(a,b)=>{ document.getElementById('aiStatus').textContent=`Writing explanations ${a}/${b}…`; }); }catch(e){ toast('Cards are ready, but explanations stopped early: '+e.message); } }
       document.getElementById('aiStatus').textContent=doneMessage({ mode:run.mode, n:cards.length, count, allowExpansion, topicOnly, info:run.info, stopped:run.stopped, fatal:run.fatal });
       const preview = document.getElementById('aiPreview');
       preview.innerHTML = cardType==='mcq'
@@ -3305,6 +3313,7 @@ Return ONLY JSON: {"cards":[{"front":"...","back":"..."}]}.`;
           : c.type==='fitb'
           ? {id:uid(), type:'fitb', front:c.front, answers:c.answers, back:c.answers[0], interval:0, ease:2.5, due:0, reps:0}
           : {id:uid(), type:'basic', front:c.front, back:c.back, interval:0, ease:2.5, due:0, reps:0};
+        if(c.explain) base.explain=c.explain;
         if(c.key) base.key=c.key;
         return base;
       };
@@ -3503,7 +3512,7 @@ async function makeAssignment(goal, minutes){
     const r=await coachAsk(goal, minutes); let ids=(r.deckIds||[]).filter(id=>state.decks[id]);
     if(r.newDeck&&Array.isArray(r.newDeck.cards)&&r.newDeck.cards.length){
       const id=ensureDeck(r.newDeck.name||goal.slice(0,40));
-      r.newDeck.cards.forEach(c=>{ if(c.front&&c.back) state.decks[id].cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),interval:0,ease:2.5,due:0,reps:0}); });
+      r.newDeck.cards.forEach(c=>{ if(c.front&&c.back) state.decks[id].cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),...(c.explain?{explain:String(c.explain)}:{}),interval:0,ease:2.5,due:0,reps:0}); });
       saveDecks(); ids=[id];
     }
     if(!ids.length) ids=Object.keys(state.decks);
@@ -3521,6 +3530,7 @@ function renderCoach(){
       <p class="sub">Say it in your own words. You’ll get one small assignment, never a giant pile.</p>
       <textarea id="coachGoal" placeholder="e.g. “learn 1000 Spanish words this month”, “study my biology decks over the next 3 weeks”, “I want to learn the basics of Spanish”, “go over what I keep forgetting”, “quiz me for 5 minutes”"></textarea>
       <div class="coach-row"><span class="sub">Time:</span>${[5,10,20,30,60].map(m=>`<button class="chip coach-min ${m===coachMins()?'on':''}" data-m="${m}">${fmtMins(m)}</button>`).join('')}<input id="coachCustom" class="coach-custom" placeholder="Custom: 45, 1.5 hr…" value="${[5,10,20,30,60].includes(coachMins())?'':fmtMins(coachMins())}" aria-label="Custom time"></div>
+      <label class="check"><input type="checkbox" id="coachExplain" ${state.coachExplain?'checked':''} onchange="state.coachExplain=this.checked;saveDecks()"> Add a short explanation to every card</label>
       <div class="today-actions"><button class="btn btn-lg" id="coachGo">${ICONS.sparkle} Give me an assignment</button></div>
       ${hasDecks?`<div class="coach-row"><button class="chip" id="qWeak">My weak spots</button><button class="chip" id="qQuick">Quick warm-up</button></div>`:''}
     </section>
@@ -3555,20 +3565,20 @@ function dueCards(d){
   let room=Math.max(0,lim-d.cards.filter(c=>c.introDay===today).length);
   return d.cards.filter(c=>{ if(c.reps>0||(c.due&&c.due>now)) return c.due<=now; if(room>0){ room--; return true; } return false; });
 }
-async function aiJson(prompt, tokens){
-  const resp=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages:[{role:'system',content:'You are a warm, practical study coach. Reply with ONLY a JSON object, no markdown.'},{role:'user',content:prompt}],temperature:0.4,max_completion_tokens:tokens,reasoning_effort:'low',include_reasoning:false,response_format:{type:'json_object'}})});
+async function aiJson(prompt, tokens, sys){
+  const resp=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages:[{role:'system',content:sys||'You are a warm, practical study coach. Reply with ONLY a JSON object, no markdown.'},{role:'user',content:prompt}],temperature:0.4,max_completion_tokens:tokens,reasoning_effort:'low',include_reasoning:false,response_format:{type:'json_object'}})});
   const data=await resp.json().catch(()=>({}));
   if(!resp.ok) throw new Error(typeof data.error==='string'?data.error:'The AI is busy. Try again in a moment.');
   const raw=(data.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim();
   return JSON.parse(raw.slice(raw.indexOf('{'),raw.lastIndexOf('}')+1));
 }
 async function coachAsk(goal, minutes){
-  return aiJson(`Student goal: "${goal}"\nTime available today: ${minutes} minutes (about ${minutes*3} cards).\nTheir decks: ${JSON.stringify(coachDecksSummary())}\n\nReturn {"title":"short assignment name","message":"1-2 encouraging sentences","deckIds":["ids of existing decks that fit, or []"],"count":cards for today (${Math.max(5,minutes*2)}-${minutes*3}),"newDeck":null or {"name":"","cards":[{"front":"","back":""}]},"plan":null}.\nIf the goal is a topic their decks don't cover, set newDeck with 10 beginner-friendly cards and deckIds [].\nIf the goal spans several days or weeks (e.g. "1000 words in a month", "by next Friday", "over 3 weeks"), set newDeck null, deckIds [] and plan = {"name":"plan name","days":number of days,"totalCards":number,"deckId":"id of an existing deck to spread out, or null to create new cards","topics":["one short topic per day, in learning order, easy to hard, up to 60 items"]}.\nOtherwise keep plan null and keep today's count small.`, 3500);
+  return aiJson(`Student goal: "${goal}"\nTime available today: ${minutes} minutes (about ${minutes*3} cards).\nTheir decks: ${JSON.stringify(coachDecksSummary())}\n\nReturn {"title":"short assignment name","message":"1-2 encouraging sentences","deckIds":["ids of existing decks that fit, or []"],"count":cards for today (${Math.max(5,minutes*2)}-${minutes*3}),"newDeck":null or {"name":"","cards":[{"front":"","back":""${state.coachExplain?',"explain":"1-2 sentence why"':''}}]},"plan":null}.\nIf the goal is a topic their decks don't cover, set newDeck with 10 beginner-friendly cards and deckIds [].\nIf the goal spans several days or weeks (e.g. "1000 words in a month", "by next Friday", "over 3 weeks"), set newDeck null, deckIds [] and plan = {"name":"plan name","days":number of days,"totalCards":number,"deckId":"id of an existing deck to spread out, or null to create new cards","topics":["one short topic per day, in learning order, easy to hard, up to 60 items"]}.\nOtherwise keep plan null and keep today's count small.`, 3500);
 }
 async function genPlanCards(p, n){
   const d=planDeck(p), topic=p.topics[Math.min(p.next||0,p.topics.length-1)]||p.goal, seen=new Set(d.cards.map(c=>c.front.toLowerCase()));
-  const r=await aiJson(`Goal: "${p.goal}". Today's topic: "${topic}". Write exactly ${n} new flashcards on this topic, ordered easy to hard, with short fronts and concise answers. Return {"cards":[{"front":"","back":""}]}. Do not repeat any of these: ${d.cards.slice(-60).map(c=>c.front).join(' | ')}`, 4000);
-  (r.cards||[]).forEach(c=>{ if(c.front&&c.back&&!seen.has(String(c.front).toLowerCase())) d.cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),interval:0,ease:2.5,due:0,reps:0}); });
+  const r=await aiJson(`Goal: "${p.goal}". Today's topic: "${topic}". Write exactly ${n} new flashcards on this topic, ordered easy to hard, with short fronts and concise answers. Return {"cards":[{"front":"","back":""${state.coachExplain?',"explain":"1-2 sentence why"':''}}]}. Do not repeat any of these: ${d.cards.slice(-60).map(c=>c.front).join(' | ')}`, state.coachExplain?6500:4000);
+  (r.cards||[]).forEach(c=>{ if(c.front&&c.back&&!seen.has(String(c.front).toLowerCase())) d.cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),...(c.explain?{explain:String(c.explain)}:{}),interval:0,ease:2.5,due:0,reps:0}); });
   p.next=(p.next||0)+1; saveDecks();
 }
 // Generate only as many cards as today needs, so a 1,000-card plan is ~35 cards per day, made on demand.
@@ -3599,7 +3609,7 @@ async function makeAssignment(goal, minutes){
     let ids=(r.deckIds||[]).filter(id=>state.decks[id]);
     if(r.newDeck&&Array.isArray(r.newDeck.cards)&&r.newDeck.cards.length){
       const id=ensureDeck(r.newDeck.name||goal.slice(0,40));
-      r.newDeck.cards.forEach(c=>{ if(c.front&&c.back) state.decks[id].cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),interval:0,ease:2.5,due:0,reps:0}); });
+      r.newDeck.cards.forEach(c=>{ if(c.front&&c.back) state.decks[id].cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),...(c.explain?{explain:String(c.explain)}:{}),interval:0,ease:2.5,due:0,reps:0}); });
       saveDecks(); ids=[id];
     }
     if(!ids.length) ids=Object.keys(state.decks);
@@ -3651,7 +3661,7 @@ function dueCards(d){
   return d.cards.filter(c=>{ if(c.reps>0||(c.due&&c.due>now)) return c.due<=now; if(room>0){ room--; return true; } return false; });
 }
 async function coachAsk(goal, minutes, span){
-  return aiJson(`Student goal: "${goal}"\nTime available per session: ${fmtMins(minutes)} (about ${minutes*3} cards).\nTheir decks: ${JSON.stringify(coachDecksSummary())}\n\nReturn {"title":"short assignment name","message":"1-2 encouraging sentences","deckIds":["ids of existing decks that fit the goal, or []"],"count":cards for one session (${Math.max(5,minutes*2)}-${minutes*3}),"newDeck":null or {"name":"","cards":[{"front":"","back":""}]},"plan":null}.\n${span?`The student wants a PLAN spanning ${span} days. Set newDeck null and plan = {"name":"plan name","days":${span},"totalCards":number,"deckIds":["existing deck ids to spread over the days; [] if the goal needs new material"],"topics":["one short topic per day, easy to hard, up to 60 items (only needed when deckIds is [])"]}. Use existing decks whenever they fit the goal.`:'If the goal is a topic their decks don\'t cover, set newDeck with 10 beginner cards and deckIds []. If it spans several days or weeks, set plan as {"name","days","totalCards","deckIds":[],"topics":[]}, otherwise keep plan null.'}`, 3500);
+  return aiJson(`Student goal: "${goal}"\nTime available per session: ${fmtMins(minutes)} (about ${minutes*3} cards).\nTheir decks: ${JSON.stringify(coachDecksSummary())}\n\nReturn {"title":"short assignment name","message":"1-2 encouraging sentences","deckIds":["ids of existing decks that fit the goal, or []"],"count":cards for one session (${Math.max(5,minutes*2)}-${minutes*3}),"newDeck":null or {"name":"","cards":[{"front":"","back":""${state.coachExplain?',"explain":"1-2 sentence why"':''}}]},"plan":null}.\n${span?`The student wants a PLAN spanning ${span} days. Set newDeck null and plan = {"name":"plan name","days":${span},"totalCards":number,"deckIds":["existing deck ids to spread over the days; [] if the goal needs new material"],"topics":["one short topic per day, easy to hard, up to 60 items (only needed when deckIds is [])"]}. Use existing decks whenever they fit the goal.`:'If the goal is a topic their decks don\'t cover, set newDeck with 10 beginner cards and deckIds []. If it spans several days or weeks, set plan as {"name","days","totalCards","deckIds":[],"topics":[]}, otherwise keep plan null.'}`, 3500);
 }
 function createPlan(pl, goal){
   let ids=(pl.deckIds||[pl.deckId]).filter(id=>id&&state.decks[id]); const gen=!ids.length||!ids.some(id=>state.decks[id].cards.length);
@@ -3677,7 +3687,7 @@ async function makeAssignment(goal, minutes){
     let ids=(r.deckIds||[]).filter(id=>state.decks[id]);
     if(r.newDeck&&Array.isArray(r.newDeck.cards)&&r.newDeck.cards.length){
       const id=ensureDeck(r.newDeck.name||goal.slice(0,40));
-      r.newDeck.cards.forEach(c=>{ if(c.front&&c.back) state.decks[id].cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),interval:0,ease:2.5,due:0,reps:0}); });
+      r.newDeck.cards.forEach(c=>{ if(c.front&&c.back) state.decks[id].cards.push({id:uid(),type:'basic',front:String(c.front),back:String(c.back),...(c.explain?{explain:String(c.explain)}:{}),interval:0,ease:2.5,due:0,reps:0}); });
       saveDecks(); ids=[id];
     }
     if(!ids.length) ids=Object.keys(state.decks);
@@ -3707,6 +3717,42 @@ function plansHtml(){
       <details class="plan-days"><summary>See the whole schedule</summary><ol>${rows}</ol></details></section>`;
   }).join('');
 }
+
+/* ===== v5: explanations (generate with a checkbox, add to existing decks/sets, show while studying) ===== */
+let explaining=false;
+async function explainCards(cards, onProgress){
+  const todo=cards.filter(c=>!c.explain); let done=0;
+  for(let i=0;i<todo.length;i+=15){
+    const batch=todo.slice(i,i+15), items=batch.map((c,k)=>({i:k,q:c.front,a:cardAnswerText(c)}));
+    let r=null;
+    for(let t=0;t<3&&!r;t++){
+      try{ r=await aiJson(`For each flashcard, write a clear 1-2 sentence explanation of WHY the answer is correct or the idea behind it, in plain language a student can learn from. Stay general if you are unsure of a detail. Cards: ${JSON.stringify(items)}\nReturn {"explanations":[{"i":number,"e":"text"}]}`,3000,'You are a clear, accurate tutor. Reply with ONLY a JSON object, no markdown.'); }
+      catch(e){ if(t===2){ e.done=done; throw e; } await new Promise(res=>setTimeout(res,6000*(t+1))); }
+    }
+    (r.explanations||[]).forEach(x=>{ const c=batch[x.i]; if(c&&x.e){ c.explain=String(x.e).trim(); done++; } });
+    if(onProgress) onProgress(Math.min(i+15,todo.length),todo.length);
+  }
+  return done;
+}
+// id may be a deck or a whole set
+async function addExplanations(id){
+  if(explaining){ toast('Already writing explanations. Hang tight.'); return; }
+  const todo=exportSource(id).cards.filter(c=>!c.explain);
+  if(!todo.length){ toast('Every card already has an explanation.'); return; }
+  explaining=true; toast(`Writing explanations for ${todo.length} card${todo.length===1?'':'s'}…`);
+  try{ const n=await explainCards(todo,(a,b)=>{ saveDecks(); toast(`Explaining ${a}/${b}…`); }); saveDecks(); toast(`Added ${n} explanation${n===1?'':'s'}.`,'success'); }
+  catch(e){ saveDecks(); toast(`Stopped after ${e.done||0} (${e.message}). Press the button again to continue.`); }
+  explaining=false; renderDecks();
+}
+const _renderStudy2=renderStudy;
+renderStudy=function(){
+  _renderStudy2();
+  const s=studySession; if(!s||!s.showBack||s.pos>=s.queue.length) return;
+  const qi=s.queue[s.pos], d=state.decks[qi.deckId], c=d&&d.cards.find(x=>x.id===qi.cardId), gr=document.getElementById('gradeRow'); if(!c||!gr) return;
+  gr.insertAdjacentHTML('beforebegin', c.explain?`<div class="explain-box"><b>💡 Why</b><p>${escapeHtml(c.explain)}</p></div>`:`<button class="btn secondary explain-btn" id="explainOne">💡 Explain this card</button>`);
+  const b=document.getElementById('explainOne');
+  if(b) b.onclick=async()=>{ b.disabled=true; b.textContent='Thinking…'; try{ await explainCards([c]); saveDecks(); renderStudy(); }catch(e){ b.disabled=false; b.textContent='💡 Explain this card'; toast('Couldn’t explain that: '+e.message); } };
+};
 
 const _renderCoach=renderCoach;
 renderCoach=function(){
